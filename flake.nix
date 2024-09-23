@@ -22,10 +22,11 @@
     devShells = forAllSystems (system: pkgs: {
       default = pkgs.mkShell {
         buildInputs = with pkgs; [
+          awscli2
+          bun
           eslint
           nodejs_22
           nodePackages_latest.prettier
-          bun
         ];
       };
     });
