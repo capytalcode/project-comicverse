@@ -9,11 +9,11 @@
 
 	let reader: Element;
 	let scroll: number;
-	let color = pages[0]?.background;
+	let color = hexToRgb(pages[0]?.background);
 	let currentPage = 0;
 	let colorPerc = 0;
 	let currentColor = color;
-	let nextColor = pages[1]?.background ?? pages[0]?.background;
+	let nextColor = hexToRgb(pages[1]?.background ?? pages[0]?.background);
 	let currentChunk = 0;
 	let nextChunk = 0;
 
@@ -26,40 +26,34 @@
 		maxScroll = Math.max(reader.scrollHeight - reader.clientHeight);
 	});
 
-	function blendHexColors(c1: string, c2: string, ratio: number): string {
-		// Convert hex colors to RGB
-		const rgb1 = [
-			parseInt(c1.substring(1, 3), 16) / 255,
-			parseInt(c1.substring(3, 5), 16) / 255,
-			parseInt(c1.substring(5, 7), 16) / 255
+	function hexToRgb(color: string): number[] {
+		return [
+			parseInt(color.substring(1, 3), 16) / 255,
+			parseInt(color.substring(3, 5), 16) / 255,
+			parseInt(color.substring(5, 7), 16) / 255
 		];
-		const rgb2 = [
-			parseInt(c2.substring(1, 3), 16) / 255,
-			parseInt(c2.substring(3, 5), 16) / 255,
-			parseInt(c2.substring(5, 7), 16) / 255
-		];
+	}
 
-		// Blend RGB values
-		const blendedRgb = [
-			rgb1[0] * (1 - ratio) + rgb2[0] * ratio,
-			rgb1[1] * (1 - ratio) + rgb2[1] * ratio,
-			rgb1[2] * (1 - ratio) + rgb2[2] * ratio
-		];
-
-		// Convert blended RGB to hex
-		const blendedHex = `#${
-			Math.round(blendedRgb[0] * 255)
+	function rgbToHex(rgb: number[]): string {
+		return `#${
+			Math.round(rgb[0] * 255)
 				.toString(16)
 				.padStart(2, '0') +
-			Math.round(blendedRgb[1] * 255)
+			Math.round(rgb[1] * 255)
 				.toString(16)
 				.padStart(2, '0') +
-			Math.round(blendedRgb[2] * 255)
+			Math.round(rgb[2] * 255)
 				.toString(16)
 				.padStart(2, '0')
 		}`;
+	}
 
-		return blendedHex;
+	function blendRgbColors(c1: number[], c2: number[], ratio: number): number[] {
+		return [
+			c1[0] * (1 - ratio) + c2[0] * ratio,
+			c1[1] * (1 - ratio) + c2[1] * ratio,
+			c1[2] * (1 - ratio) + c2[2] * ratio
+		];
 	}
 </script>
 
@@ -70,9 +64,9 @@
 				{
 					page: currentPage,
 					color: {
-						background: color,
-						current: currentColor,
-						next: nextColor,
+						background: rgbToHex(color),
+						current: rgbToHex(currentColor),
+						next: rgbToHex(nextColor),
 						percentage: colorPerc
 					},
 					scroll: {
@@ -132,7 +126,7 @@
 		{#if browser}
 			<article
 				class="reader"
-				style={`--bg-color: ${color}`}
+				style={`--bg-color: rgba(${color.map((c) => c * 255).join(',')}, 0.7)`}
 				bind:this={reader}
 				on:scroll={() => {
 					scroll = reader.scrollTop;
@@ -144,15 +138,15 @@
 						}
 					}
 					let i = chunks.findIndex((c) => c > scroll - chunk);
-					currentColor = pages[i]?.background;
-					nextColor = pages[i + 1]?.background ?? currentColor;
+					currentColor = hexToRgb(pages[i]?.background);
+					nextColor = pages[i + 1]?.background ? hexToRgb(pages[i + 1]?.background) : currentColor;
 
 					currentChunk = chunks[i];
 					nextChunk = chunks[i + 1] ?? maxScroll;
 
 					colorPerc = ((scroll - currentChunk) / (nextChunk - currentChunk)) * 100;
 
-					color = blendHexColors(currentColor, nextColor, colorPerc / 100);
+					color = blendRgbColors(currentColor, nextColor, colorPerc / 100);
 
 					currentPage = i;
 				}}
