@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import type { PageData } from './$types';
 
 	export let data: PageData;
@@ -6,22 +7,88 @@
 
 	let modal = false;
 
-	let reader, scroll;
-	let color = pages[0].background;
+	let reader: Element;
+	let scroll: number;
+	let color = pages[0]?.background;
+	let currentPage = 0;
+	let colorPerc = 0;
+	let currentColor = color;
+	let nextColor = pages[1]?.background ?? pages[0]?.background;
+	let currentChunk = 0;
+	let nextChunk = 0;
+
+	let browser = false;
+	let maxScroll = 0;
+	let chunk = 0;
+	let chunks: number[] = [];
+	onMount(() => {
+		browser = true;
+		maxScroll = Math.max(reader.scrollHeight - reader.clientHeight);
+	});
+
+	function blendHexColors(c1: string, c2: string, ratio: number): string {
+		// Convert hex colors to RGB
+		const rgb1 = [
+			parseInt(c1.substring(1, 3), 16) / 255,
+			parseInt(c1.substring(3, 5), 16) / 255,
+			parseInt(c1.substring(5, 7), 16) / 255
+		];
+		const rgb2 = [
+			parseInt(c2.substring(1, 3), 16) / 255,
+			parseInt(c2.substring(3, 5), 16) / 255,
+			parseInt(c2.substring(5, 7), 16) / 255
+		];
+
+		// Blend RGB values
+		const blendedRgb = [
+			rgb1[0] * (1 - ratio) + rgb2[0] * ratio,
+			rgb1[1] * (1 - ratio) + rgb2[1] * ratio,
+			rgb1[2] * (1 - ratio) + rgb2[2] * ratio
+		];
+
+		// Convert blended RGB to hex
+		const blendedHex = `#${
+			Math.round(blendedRgb[0] * 255)
+				.toString(16)
+				.padStart(2, '0') +
+			Math.round(blendedRgb[1] * 255)
+				.toString(16)
+				.padStart(2, '0') +
+			Math.round(blendedRgb[2] * 255)
+				.toString(16)
+				.padStart(2, '0')
+		}`;
+
+		return blendedHex;
+	}
 </script>
 
-<pre style="position: fixed; bottom: 0; font-size: 0.6rem;">
+{#if browser}
+	<pre style="position: fixed; bottom: 0; font-size: 0.6rem;">
 <code
-		>{JSON.stringify(
-			{
-				color: color,
-				scroll: scroll
-			},
-			null,
-			2
-		)}
+			>{JSON.stringify(
+				{
+					page: currentPage,
+					color: {
+						background: color,
+						current: currentColor,
+						next: nextColor,
+						percentage: colorPerc
+					},
+					scroll: {
+						current: scroll,
+						max: maxScroll,
+						chunks: chunks,
+						currentChunk: currentChunk,
+						nextChunk: nextChunk
+					}
+				},
+				null,
+				2
+			)}
 </code>
 </pre>
+{/if}
 
 <dialog open={modal}>
 	<article>
@@ -61,26 +128,53 @@
 			</form>
 		</section>
 	</aside>
-	<article
-		class="reader"
-		style={`--bg-color: ${color}`}
-		bind:this={reader}
-		on:scroll={() => (scroll = reader.scrollTop)}
-	>
-		<div class="pages">
-			{#each pages as page}
-				<div class="page" style={`background-color:${page.background}`}>
-					<img width="1080" height="1920" src={`/files/${data.project.id}/${page.src}`} />
-					<form method="POST" action="?/delete-file" class="delete-file">
-						<fieldset role="group">
-							<input type="text" disabled value={`${page.src}`} name="file" />
-							<input type="submit" value="Delete page" class="pico-background-red-500" />
-						</fieldset>
-					</form>
+	{#key maxScroll}
+		{#if browser}
+			<article
+				class="reader"
+				style={`--bg-color: ${color}`}
+				bind:this={reader}
+				on:scroll={() => {
+					scroll = reader.scrollTop;
+					if (maxScroll === 0) {
+						maxScroll = Math.max(reader.scrollHeight - reader.clientHeight);
+						chunk = Math.round(maxScroll / pages.length);
+						for (let i = 0; i < pages.length; i++) {
+							chunks = [...chunks, chunk * i];
+						}
+					}
+					let i = chunks.findIndex((c) => c > scroll - chunk);
+					currentColor = pages[i]?.background;
+					nextColor = pages[i + 1]?.background ?? currentColor;
+
+					currentChunk = chunks[i];
+					nextChunk = chunks[i + 1] ?? maxScroll;
+
+					colorPerc = ((scroll - currentChunk) / (nextChunk - currentChunk)) * 100;
+
+					color = blendHexColors(currentColor, nextColor, colorPerc / 100);
+
+					currentPage = i;
+				}}
+			>
+				<div class="pages">
+					{#each pages as page, key}
+						{@const coord = key * chunk}
+						<div class="page" style={`background-color:${page.background}`}>
+							<img width="1080" height="1920" src={`/files/${data.project.id}/${page.src}`} />
+							<form method="POST" action="?/delete-file" class="delete-file">
+								<fieldset role="group">
+									<input type="text" disabled value={`${page.src}`} name="file" />
+									<input type="submit" value="Delete page" class="pico-background-red-500" />
+								</fieldset>
+							</form>
+						</div>
+						<code>{coord}</code>
+					{/each}
 				</div>
-			{/each}
-		</div>
-	</article>
+			</article>
+		{/if}
+	{/key}
 </section>
 
 <style>
