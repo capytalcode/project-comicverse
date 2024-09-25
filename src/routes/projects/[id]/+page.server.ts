@@ -5,6 +5,9 @@ import { db, s3, type Project } from '$lib';
 import { AWS_S3_DEFAULT_BUCKET } from '$env/static/private';
 import { extname } from 'node:path';
 
+export const prerender = false;
+export const ssr = false;
+
 export const load = (async ({ params }) => {
 	const res = await db.get<{ id: string; name: string }>(
 		'SELECT ID, Name FROM projects WHERE ID = ?',

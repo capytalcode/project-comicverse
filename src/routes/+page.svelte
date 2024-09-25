@@ -13,7 +13,7 @@
 <section>
 	{#each data.projects as p}
 		<article>
-			<h1><a href={`/projects/${p.ID}`}>{p.Name}</a></h1>
+			<h1><a data-sveltekit-reload href={`/projects/${p.ID}`}>{p.Name}</a></h1>
 			<p class="id">{p.ID}</p>
 		</article>
 	{/each}

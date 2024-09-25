@@ -67,7 +67,7 @@
 						background: rgbToHex(color),
 						current: rgbToHex(currentColor),
 						next: rgbToHex(nextColor),
-						percentage: colorPerc
+						percentage: Math.round(colorPerc)
 					},
 					scroll: {
 						current: scroll,
@@ -108,6 +108,7 @@
 </dialog>
 <section class="project">
 	<aside>
+		<a data-sveltekit-reload href="/" style="font-size: 0.5rem;">Return home</a>
 		<section>
 			<h1>{data.project.title}</h1>
 			<p class="id">{data.project.id}</p>
