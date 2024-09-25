@@ -44,6 +44,26 @@ export const actions = {
 
 		redirect(303, '/');
 	},
+	'delete-file': async ({ params, request }) => {
+		const form = await request.formData();
+		const file = form?.get('file') as string;
+
+		const project = await s3.getObject(AWS_S3_DEFAULT_BUCKET, `${params.id}/project.json`);
+		project.on('error', (err: any) => {
+			console.log(err);
+		});
+		let p: string = '';
+		project.on('data', (chunk: any) => {
+			p += chunk;
+		});
+		await stream.finished(project);
+		let proj = JSON.parse(p) as Project;
+
+		proj.pages = proj.pages.filter((p) => p.src != file);
+
+		await s3.removeObject(AWS_S3_DEFAULT_BUCKET, `${params.id}/${file}`);
+		await s3.putObject(AWS_S3_DEFAULT_BUCKET, `${params.id}/project.json`, JSON.stringify(proj));
+	},
 	addpage: async ({ request, params }) => {
 		const form = await request.formData();
 		const file = form?.get('file') as File;
