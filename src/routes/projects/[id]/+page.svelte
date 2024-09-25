@@ -9,11 +9,11 @@
 
 	let reader: Element;
 	let scroll: number;
-	let color = hexToRgb(pages[0]?.background);
+	let color = hexToRgb(pages[0]?.background ?? '#181818');
 	let currentPage = 0;
 	let colorPerc = 0;
 	let currentColor = color;
-	let nextColor = hexToRgb(pages[1]?.background ?? pages[0]?.background);
+	let nextColor = hexToRgb(pages[1]?.background ?? pages[0]?.background ?? '#181818');
 	let currentChunk = 0;
 	let nextChunk = 0;
 
