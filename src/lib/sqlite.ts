@@ -17,12 +17,21 @@ CREATE TABLE IF NOT EXISTS projects (
 type Project = {
 	id: string;
 	title: string;
-	pages: {
-		title: string;
-		src: string;
-		background: string;
-	}[];
+	pages: Page[];
 };
 
-export type { Project };
+type Page = {
+	title: string;
+	src: string;
+	background: string;
+	iteraction: Iteraction[];
+};
+
+type Iteraction = {
+	x: number;
+	y: number;
+	link: string;
+};
+
+export type { Project, Iteraction, Page };
 export default db;

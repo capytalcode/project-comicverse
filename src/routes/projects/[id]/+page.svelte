@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import type { PageData } from './$types';
+	import { arrayBufferToBlob } from 'blob-util';
+	import IImage from './IteractiveImage.svelte';
 
 	export let data: PageData;
 	const pages = data.project.pages;
@@ -55,6 +57,31 @@
 			c1[2] * (1 - ratio) + c2[2] * ratio
 		];
 	}
+
+	let fileInput: Element;
+	let blobUrl: string | undefined = undefined;
+	let currentIteraction: { x: number; y: number; link: string };
+	let iteractionUrl = '';
+	let iteractions: { x: number; y: number; link: string }[] = [];
+	let imageElement: Element;
+	let imageX = 0;
+	let imageY = 0;
+	let imageWidth = 0;
+	let imageHeight = 0;
+	function readFile(file: Blob) {
+		let reader = new FileReader();
+		reader.onloadend = function (e) {
+			let buf = e.target?.result;
+			let blob = arrayBufferToBlob(buf as ArrayBuffer, file.type);
+			blobUrl = window.URL.createObjectURL(blob);
+		};
+
+		reader.readAsArrayBuffer(file);
+	}
+
+	let temp: any;
+
+	let images: Map<string, { width: number; height: number }> = new Map();
 </script>
 
 {#if browser}
@@ -82,6 +109,12 @@
 			)}
 </code>
 </pre>
+
+	<details style="position: fixed; bottom: 0; font-size: 0.6rem;">
+		<pre>
+<code>{JSON.stringify(pages)}</code>
+</pre>
+	</details>
 {/if}
 
 <dialog open={modal}>
@@ -101,7 +134,96 @@
 		<form method="POST" action="?/addpage" enctype="multipart/form-data">
 			<input type="text" required placeholder="Page title" name="title" />
 			<input type="color" required placeholder="Background color" name="color" />
-			<input type="file" required name="file" />
+			{#if blobUrl}
+				<div class="blob-image">
+					<div class="blob-image-image">
+						<div
+							class="iteraction-box"
+							style={`${[
+								`margin-left:${Math.round((imageX / 100) * imageWidth)}px;`,
+								`margin-top:${Math.round((imageY / 100) * imageHeight)}px;`
+							].join('')} pointer-events: none;`}
+						></div>
+						{#each iteractions as i}
+							<a
+								class="iteraction-box"
+								href={i.link}
+								style={[
+									`margin-left:${Math.round((i.x / 100) * imageWidth)}px;`,
+									`margin-top:${Math.round((i.y / 100) * imageHeight)}px;`
+								].join('')}
+							></a>
+						{/each}
+						<img
+							style="margin: auto 0;"
+							src={blobUrl}
+							bind:this={imageElement}
+							on:mousemove={(e) => {
+								let rect = imageElement.getBoundingClientRect();
+								imageX = Math.round(((e.clientX - rect.left) / rect.width) * 100);
+								imageY = Math.round(((e.clientY - rect.top) / rect.height) * 100);
+								imageWidth = rect.width;
+								imageHeight = rect.height;
+							}}
+							on:click={() => {
+								currentIteraction ||= { x: 0, y: 0, link: '' };
+								currentIteraction.x = imageX;
+								currentIteraction.y = imageY;
+							}}
+							alt=""
+						/>
+					</div>
+					<fieldset role="group">
+						<input
+							type="url"
+							placeholder="Iteraction url"
+							bind:value={iteractionUrl}
+							on:change={() => {
+								currentIteraction ||= { x: 0, y: 0, link: '' };
+								currentIteraction.link = iteractionUrl;
+							}}
+							on:mouseout={() => {
+								currentIteraction ||= { x: 0, y: 0, link: '' };
+								currentIteraction.link = iteractionUrl;
+							}}
+						/>
+						<input
+							type="button"
+							value="Add"
+							on:click|preventDefault={() => {
+								iteractions.push({
+									x: currentIteraction.x,
+									y: currentIteraction.y,
+									link: currentIteraction.link
+								});
+								iteractions = iteractions;
+							}}
+						/>
+					</fieldset>
+					<div>
+						<code>{imageX} {imageY}</code>
+						<code>
+							Iteraction: {JSON.stringify(currentIteraction)}
+						</code>
+						<input
+							style="display:hidden;"
+							type="text"
+							value={JSON.stringify(iteractions.filter(Boolean))}
+							name="iteractions"
+						/>
+					</div>
+				</div>
+			{/if}
+			<input
+				type="file"
+				required
+				name="file"
+				bind:this={fileInput}
+				on:change={() => {
+					// @ts-ignore
+					readFile(fileInput.files[0]);
+				}}
+			/>
 			<input type="submit" value="Add page" />
 		</form>
 	</article>
@@ -156,10 +278,10 @@
 					{#each pages as page, key}
 						{@const coord = key * chunk}
 						<div class="page" style={`background-color:${page.background}`}>
-							<img width="1080" height="1920" src={`/files/${data.project.id}/${page.src}`} />
+							<IImage {page} projectId={data.project.id} />
 							<form method="POST" action="?/delete-file" class="delete-file">
 								<fieldset role="group">
-									<input type="text" disabled value={`${page.src}`} name="file" />
+									<input type="text" value={`${page.src}`} name="file" />
 									<input type="submit" value="Delete page" class="pico-background-red-500" />
 								</fieldset>
 							</form>
@@ -180,6 +302,20 @@
 	.id {
 		font-size: 0.5rem;
 		opacity: 0.3;
+	}
+
+	.iteraction-box {
+		width: 30px;
+		height: 30px;
+		display: block;
+		background-color: #ff0000;
+		opacity: 0.3;
+		position: absolute;
+		z-index: 100;
+	}
+
+	.blob-image-image {
+		position: relative;
 	}
 
 	.reader {

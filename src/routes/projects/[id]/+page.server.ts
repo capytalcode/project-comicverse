@@ -49,6 +49,7 @@ export const actions = {
 		const file = form?.get('file') as File;
 		const title = form?.get('title') as string;
 		const color = form?.get('color') as string;
+		const iteractions = form?.get('iteractions') as string;
 
 		console.log(file);
 
@@ -68,7 +69,8 @@ export const actions = {
 		proj.pages.push({
 			title: title,
 			src: filename,
-			background: color
+			background: color,
+			iteraction: JSON.parse(iteractions)
 		});
 
 		const buf = Buffer.from(await file.arrayBuffer());
