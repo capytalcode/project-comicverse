@@ -127,7 +127,7 @@
 		{#if browser}
 			<article
 				class="reader"
-				style={`--bg-color: rgba(${color.map((c) => c * 255).join(',')}, 0.7)`}
+				style={`--bg-color: rgba(${color.map((c) => c * 255).join(',')}, 0.8)`}
 				bind:this={reader}
 				on:scroll={() => {
 					scroll = reader.scrollTop;
@@ -184,20 +184,26 @@
 
 	.reader {
 		display: flex;
+
 		width: 80vw;
+		height: 100vh;
+
 		justify-content: center;
 		padding-top: 5rem;
 		padding-bottom: 5rem;
 		margin-bottom: 0;
 
 		background-color: var(--bg-color);
-		height: 100vh;
 		overflow-y: scroll;
 	}
 
 	.page {
-		width: calc(1080px / 2.5);
-		min-height: calc(1920px / 2.5);
+		width: calc(1080px / 3.5);
+		min-height: calc(1920px / 3.5);
+		@media (min-width: 1024px) {
+			width: calc(1080px / 2.5);
+			min-height: calc(1920px / 2.5);
+		}
 		background-color: #fff;
 
 		display: flex;
@@ -205,6 +211,8 @@
 		justify-content: space-between;
 
 		padding: 0;
+
+		box-shadow: 0rem 1rem 1rem 0rem rgba(0, 0, 0, 0.5);
 
 		& form {
 			margin: 1rem;
@@ -230,5 +238,11 @@
 	aside {
 		padding: 1rem;
 		width: 20vw;
+		& * {
+			font-size: 0.8rem !important;
+			@media (min-width: 1024px) {
+				font-size: unset;
+			}
+		}
 	}
 </style>
