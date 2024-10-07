@@ -3,11 +3,14 @@ package router
 import (
 	"fmt"
 	"net/http"
+
+	"forge.capytal.company/capytalcode/project-comicverse/router/middleware"
 )
 
 type Router struct {
 	mux         *http.ServeMux
 	serveHttp   http.HandlerFunc
+	middlewares []middleware.Middleware
 }
 
 type RouterOpts struct {
@@ -48,7 +51,35 @@ func (rt *Router) HandleRoutes(routes []Route) {
 	}
 }
 
+func (r *Router) AddMiddleware(m middleware.Middleware) {
+	r.middlewares = append(r.middlewares, m)
+}
+
 func (rt *Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if len(rt.middlewares) > 0 {
+		rt.serveHttp = rt.wrapMiddlewares(rt.middlewares, rt.serveHttp)
+	}
 	rt.serveHttp(w, r)
 }
 
+func (r *Router) wrapMiddlewares(ms []middleware.Middleware, h http.HandlerFunc) http.HandlerFunc {
+	wh := h.ServeHTTP
+	for _, m := range ms {
+		wh = m.Serve(wh)
+	}
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		mw := middleware.NewMiddlewaredResponse(w)
+		wh(mw, r)
+		if _, err := mw.ReallyWriteHeader(); err != nil {
+			_, _ = w.Write(
+				[]byte(
+					fmt.Sprintf(
+						"Error while trying to write middlewared response.\n%s",
+						err.Error(),
+					),
+				),
+			)
+		}
+	}
+}
