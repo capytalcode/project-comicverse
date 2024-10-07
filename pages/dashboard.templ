@@ -1,10 +1,23 @@
 package pages
 
-type Dashboard struct {}
+import (
+	"net/http"
 
-func (p *Dashboard) ServeHTTP() {
+	"forge.capytal.company/capytalcode/project-comicverse/router/rerrors"
+)
+
+type Dashboard struct{}
+
+func (p *Dashboard) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if err := p.Component().Render(r.Context(), w); err != nil {
+		rerrors.InternalError(err).ServeHTTP(w, r)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
 }
 
 templ (p *Dashboard) Component() {
-
+	<div class="text-red">
+		<p>Hello world</p>
+	</div>
 }

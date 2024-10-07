@@ -4,4 +4,6 @@ import (
 	"forge.capytal.company/capytalcode/project-comicverse/router"
 )
 
-var PAGES = []router.Route{}
+var PAGES = []router.Route{
+	{Pattern: "/dashboard", Handler: &Dashboard{}},
+}

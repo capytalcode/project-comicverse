@@ -18,8 +18,8 @@ type RouterOpts struct {
 }
 
 type Route struct {
-	pattern string
-	handler http.Handler
+	Pattern string
+	Handler http.Handler
 }
 
 func NewRouter(opts ...RouterOpts) *Router {
