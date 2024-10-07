@@ -47,7 +47,7 @@ func (r *Router) HandleFunc(pattern string, hf http.HandlerFunc) {
 
 func (rt *Router) HandleRoutes(routes []Route) {
 	for _, r := range routes {
-		rt.Handle(r.pattern, r.handler)
+		rt.Handle(r.Pattern, r.Handler)
 	}
 }
 
