@@ -1,1 +1,7 @@
 *.env
+*_templ.go
+node_modules/
+bin/
+tmp/
+dist/
+assets/css/uno.css
