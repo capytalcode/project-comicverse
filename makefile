@@ -18,13 +18,13 @@ dev/templ:
 
 dev/server:
 	go run github.com/air-verse/air@v1.52.2 \
-		--build.cmd "go build ./cmd/serve -o tmp/bin/main" \
+		--build.cmd "go build -o tmp/bin/main ./cmd/serve" \
 		--build.bin "tmp/bin/main" \
 		--build.exclude_dir "node_modules" \
 		--build.include_ext "go" \
 		--build.stop_on_error "false" \
 		--misc.clean_on_exit true \
-		-- -p $(PORT) -d
+		-- -port $(PORT)
 
 dev/sync_assets:
 	go run github.com/air-verse/air@v1.52.2 \
@@ -46,7 +46,7 @@ build/templ:
 	go run github.com/a-h/templ/cmd/templ@v0.2.707 generate
 
 build/server:
-	go build ./cmd/server -o dist/server
+	go build -o dist/server ./cmd/server
 
 build/assets:
 	npx unocss
