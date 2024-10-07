@@ -28,8 +28,7 @@
           # Javascript tools
           eslint
           nodejs_22
-          nodePackages_latest.prettier
-          bun
+          nodePackages_latest.eslint
           # Go tools
           go
           gofumpt
