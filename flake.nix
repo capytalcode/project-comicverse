@@ -26,7 +26,7 @@
       default = pkgs.mkShell {
         buildInputs = with pkgs; [
           # Javascript tools
-          eslint
+          eslint_d
           nodejs_22
           nodePackages_latest.eslint
           # Go tools
