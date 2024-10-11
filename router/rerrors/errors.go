@@ -47,11 +47,11 @@ func (rerr RouteError) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				"error":        err.Error(),
 			},
 		})
-		w.Write(j)
 		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(j)
 		return
 	}
 
-	w.Write(j)
 	w.WriteHeader(rerr.StatusCode)
+	w.Write(j)
 }

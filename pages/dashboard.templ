@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"forge.capytal.company/capytalcode/project-comicverse/router/rerrors"
+	"forge.capytal.company/capytalcode/project-comicverse/templates/layouts"
 )
 
 type Dashboard struct{}
@@ -13,11 +14,14 @@ func (p *Dashboard) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		rerrors.InternalError(err).ServeHTTP(w, r)
 		return
 	}
-	w.WriteHeader(http.StatusOK)
 }
 
 templ (p *Dashboard) Component() {
-	<div class="text-red">
-		<p>Hello world</p>
-	</div>
+	@layouts.Page() {
+		<div class="text-red">
+			<p>Hello world</p>
+			<p>test</p>
+			<p>test</p>
+		</div>
+	}
 }
