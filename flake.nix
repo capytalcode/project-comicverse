@@ -24,11 +24,15 @@
   in {
     devShells = forAllSystems (system: pkgs: {
       default = pkgs.mkShell {
+        CGO_ENABLED = "0";
+        hardeningDisable = ["all"];
+
         buildInputs = with pkgs; [
           # Javascript tools
           eslint_d
           nodejs_22
           nodePackages_latest.eslint
+
           # Go tools
           go
           gofumpt
@@ -37,6 +41,7 @@
           gotools
           delve
           (templ system)
+
           # Sqlite tools
           sqlite
           lazysql
