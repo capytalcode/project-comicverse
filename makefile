@@ -14,17 +14,18 @@ fmt:
 dev/templ:
 	go run github.com/a-h/templ/cmd/templ@v0.2.707 generate --watch \
 		--proxy=http://localhost:$(PORT) \
+		--proxybind="0.0.0.0" \
 		--open-browser=false
 
 dev/server:
 	go run github.com/air-verse/air@v1.52.2 \
-		--build.cmd "go build -o tmp/bin/main ./cmd/serve" \
+		--build.cmd "go build -o tmp/bin/main ." \
 		--build.bin "tmp/bin/main" \
 		--build.exclude_dir "node_modules" \
 		--build.include_ext "go" \
 		--build.stop_on_error "false" \
 		--misc.clean_on_exit true \
-		-- -port $(PORT)
+		-- -dev -port $(PORT)
 
 dev/sync_assets:
 	go run github.com/air-verse/air@v1.52.2 \
@@ -45,11 +46,16 @@ dev:
 build/templ:
 	go run github.com/a-h/templ/cmd/templ@v0.2.707 generate
 
-build/server:
-	go build -o dist/server ./cmd/server
+build/app:
+	go build -o dist/app .
 
 build/assets:
 	npx unocss
+
+build: build/templ build/assets build/app
+
+run: build
+	./dist/app
 
 clean:
 	if [[ -d "dist" ]]; then rm -r ./dist; fi
