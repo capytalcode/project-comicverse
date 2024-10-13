@@ -24,6 +24,9 @@ const config = [
 		ignores: [
 			'node_modules',
 			'package-lock.json',
+			'package.json',
+			'tsconfig.json',
+			'.vscode',
 			'dist',
 		],
 	},
@@ -32,6 +35,16 @@ const config = [
 	js.configs.recommended,
 	(/** @type {Config} */ (ts.configs.eslintRecommended)),
 	...(/** @type {Config[]} */ (ts.configs.strictTypeChecked)),
+	{
+		languageOptions: {
+			parserOptions: {
+				projectService: true,
+				// @ts-expect-error import.meta.dirname is not defined but works in NodeJS
+				// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+				tsconfigRootDir: import.meta.dirname,
+			},
+		},
+	},
 	// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 	(/** @type {Config} */ (imports.flatConfigs.recommended)),
 	{
@@ -70,10 +83,6 @@ const config = [
 				ecmaFeatures: {
 					impliedStrict: true,
 				},
-				projectService: true,
-				// @ts-expect-error import.meta.dirname is not defined but works in NodeJS
-				// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-				tsconfigRootDir: import.meta.dirname,
 			},
 			sourceType: 'module',
 		},

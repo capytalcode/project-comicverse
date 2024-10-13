@@ -11,18 +11,16 @@
     "skipLibCheck": true,
     "sourceMap": true,
     "strict": true,
-    "target": "ESNext",
+    "target": "ESNext"
   },
   "include": [
     "./assets/**/*",
     "./eslint.config.js",
     "./uno.config.js",
-    "./package.json",
-    "./tsconfig.json",
-    "./.vscode/*.json",
+    "**/*.json"
   ],
   "exclude": [
     "./node_modules/**",
-    "./dist",
+    "./dist"
   ]
 }
