@@ -1,1 +1,6 @@
-console.log("hello world");
+/**
+ * Says hello!
+ */
+export function hello() {
+	console.log('hello world');
+}
