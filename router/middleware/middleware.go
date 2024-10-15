@@ -4,11 +4,10 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 )
 
-type Middleware interface {
-	Serve(r http.HandlerFunc) http.HandlerFunc
-}
+type Middleware func(next http.Handler) http.Handler
 
 type MiddlewaredReponse struct {
 	w          http.ResponseWriter
@@ -21,6 +20,7 @@ func NewMiddlewaredResponse(w http.ResponseWriter) *MiddlewaredReponse {
 }
 
 func (m *MiddlewaredReponse) WriteHeader(s int) {
+	m.Header().Set("Status", strconv.Itoa(s))
 	m.statuses = append(m.statuses, s)
 }
 

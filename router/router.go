@@ -62,15 +62,15 @@ func (rt *Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	rt.serveHttp(w, r)
 }
 
-func (r *Router) wrapMiddlewares(ms []middleware.Middleware, h http.HandlerFunc) http.HandlerFunc {
-	wh := h.ServeHTTP
+func (r *Router) wrapMiddlewares(ms []middleware.Middleware, h http.Handler) http.HandlerFunc {
+	wh := h
 	for _, m := range ms {
-		wh = m.Serve(wh)
+		wh = m(wh)
 	}
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		mw := middleware.NewMiddlewaredResponse(w)
-		wh(mw, r)
+		wh.ServeHTTP(mw, r)
 		if _, err := mw.ReallyWriteHeader(); err != nil {
 			_, _ = w.Write(
 				[]byte(
