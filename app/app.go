@@ -3,7 +3,9 @@ package app
 import (
 	"fmt"
 	"log"
+	"log/slog"
 	"net/http"
+	"os"
 
 	"forge.capytal.company/capytalcode/project-comicverse/pages"
 	"forge.capytal.company/capytalcode/project-comicverse/router"
@@ -54,6 +56,10 @@ func (a *App) Run() {
 
 	router.HandleRoutes(pages.PAGES)
 	router.Handle("/assets/", a.assets)
+
+	if a.dev {
+		router.AddMiddleware(middleware.DevMiddleware)
+	}
 
 	logger := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
 		Level: slog.LevelDebug,
