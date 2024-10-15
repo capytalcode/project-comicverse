@@ -7,6 +7,7 @@ import (
 
 	"forge.capytal.company/capytalcode/project-comicverse/pages"
 	"forge.capytal.company/capytalcode/project-comicverse/router"
+	"forge.capytal.company/capytalcode/project-comicverse/router/middleware"
 )
 
 type App struct {
@@ -53,6 +54,12 @@ func (a *App) Run() {
 
 	router.HandleRoutes(pages.PAGES)
 	router.Handle("/assets/", a.assets)
+
+	logger := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+		Level: slog.LevelDebug,
+	})
+	mlogger := middleware.NewLoggerMiddleware(slog.New(logger))
+	router.AddMiddleware(mlogger.Wrap)
 
 	if err := http.ListenAndServe(fmt.Sprintf(":%v", a.port), router); err != nil {
 		log.Fatal(err)
