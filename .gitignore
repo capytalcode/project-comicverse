@@ -3,5 +3,5 @@
 node_modules/
 bin/
 tmp/
-dist/
+.dist/
 assets/css/uno.css

@@ -52,7 +52,7 @@ build/templ:
 	go run github.com/a-h/templ/cmd/templ@v0.2.707 generate
 
 build/app:
-	go build -o dist/app .
+	go build -o ./.dist/app .
 
 build/assets:
 	npx unocss
@@ -60,7 +60,7 @@ build/assets:
 build: build/templ build/assets build/app
 
 run: build
-	./dist/app
+	./.dist/app
 
 clean:
 	if [[ -d "dist" ]]; then rm -r ./dist; fi
