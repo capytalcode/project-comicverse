@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"forge.capytal.company/capytalcode/project-comicverse/pages"
+	devPages "forge.capytal.company/capytalcode/project-comicverse/pages/dev"
 	"forge.capytal.company/capytalcode/project-comicverse/router"
 	"forge.capytal.company/capytalcode/project-comicverse/router/middleware"
 )
@@ -39,10 +40,10 @@ func NewApp(opts ...AppOpts) *App {
 		opts[0].Port = &d
 	}
 
-	if opts[0].Assets == nil {
-		// d := http.Dir("./assets")
-		// opts[0].Assets = d
-	}
+	// if opts[0].Assets == nil {
+	// d := http.Dir("./assets")
+	// opts[0].Assets = d
+	// }
 
 	return &App{
 		dev:    *opts[0].Dev,
@@ -58,6 +59,8 @@ func (a *App) Run() {
 	router.Handle("/assets/", a.assets)
 
 	if a.dev {
+		router.HandleRoutes(devPages.PAGES)
+
 		router.AddMiddleware(middleware.DevMiddleware)
 	}
 
