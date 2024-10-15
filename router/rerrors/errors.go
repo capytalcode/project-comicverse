@@ -48,10 +48,14 @@ func (rerr RouteError) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			},
 		})
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write(j)
+		if _, err = w.Write(j); err != nil {
+			_, _ = w.Write([]byte("Failed to write error JSON string to body"))
+		}
 		return
 	}
 
 	w.WriteHeader(rerr.StatusCode)
-	w.Write(j)
+	if _, err = w.Write(j); err != nil {
+		_, _ = w.Write([]byte("Failed to write error JSON string to body"))
+	}
 }
