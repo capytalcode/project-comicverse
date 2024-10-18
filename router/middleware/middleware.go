@@ -3,6 +3,7 @@ package middleware
 import (
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"strconv"
 )
@@ -59,4 +60,51 @@ func (m *MiddlewaredReponse) ReallyWriteHeader() (int, error) {
 	}
 
 	return bytes, nil
+}
+
+type multiResponseWriter struct {
+	response http.ResponseWriter
+	writers  []io.Writer
+}
+
+func MultiResponseWriter(
+	w http.ResponseWriter,
+	writers ...io.Writer,
+) http.ResponseWriter {
+	if mw, ok := w.(*multiResponseWriter); ok {
+		mw.writers = append(mw.writers, writers...)
+		return mw
+	}
+
+	allWriters := make([]io.Writer, 0, len(writers))
+	for _, iow := range writers {
+		if mw, ok := iow.(*multiResponseWriter); ok {
+			allWriters = append(allWriters, mw.writers...)
+		} else {
+			allWriters = append(allWriters, iow)
+		}
+	}
+
+	return &multiResponseWriter{w, allWriters}
+}
+
+func (w *multiResponseWriter) WriteHeader(status int) {
+	w.response.WriteHeader(status)
+}
+
+func (w *multiResponseWriter) Write(p []byte) (int, error) {
+	for _, w := range w.writers {
+		n, err := w.Write(p)
+		if err != nil {
+			return n, err
+		}
+		if n != len(p) {
+			return n, io.ErrShortWrite
+		}
+	}
+	return w.response.Write(p)
+}
+
+func (w *multiResponseWriter) Header() http.Header {
+	return w.response.Header()
 }

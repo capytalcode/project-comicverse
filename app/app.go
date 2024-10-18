@@ -11,6 +11,7 @@ import (
 	devPages "forge.capytal.company/capytalcode/project-comicverse/pages/dev"
 	"forge.capytal.company/capytalcode/project-comicverse/router"
 	"forge.capytal.company/capytalcode/project-comicverse/router/middleware"
+	"forge.capytal.company/capytalcode/project-comicverse/router/rerrors"
 )
 
 type App struct {
@@ -60,15 +61,17 @@ func (a *App) Run() {
 
 	if a.dev {
 		router.HandleRoutes(devPages.PAGES)
-
 		router.AddMiddleware(middleware.DevMiddleware)
 	}
 
-	logger := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
 		Level: slog.LevelDebug,
-	})
-	mlogger := middleware.NewLoggerMiddleware(slog.New(logger))
+	}))
+	mlogger := middleware.NewLoggerMiddleware(logger)
 	router.AddMiddleware(mlogger.Wrap)
+
+	mErrors := rerrors.NewErrorMiddleware(pages.ErrorPage{}.Component, logger)
+	router.AddMiddleware(mErrors.Wrap)
 
 	if err := http.ListenAndServe(fmt.Sprintf(":%v", a.port), router); err != nil {
 		log.Fatal(err)
