@@ -98,41 +98,7 @@ func NewErrorMiddleware(
 func (m *ErrorMiddleware) Wrap(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if uerr := r.URL.Query().Get("error"); uerr != "" {
-			e, err := base64.URLEncoding.DecodeString(uerr)
-			if err != nil {
-				m.log.Error("Failed to decode \"error\" parameter from error redirect",
-					slog.String("method", r.Method),
-					slog.String("path", r.URL.Path),
-					slog.Int("status", 0),
-					slog.String("data", string(e)),
-				)
-				w.WriteHeader(http.StatusInternalServerError)
-				_, _ = w.Write([]byte(
-					fmt.Sprintf("Data %s\nError %s", string(e), err.Error()),
-				))
-				return
-			}
-
-			var rerr RouteError
-			if err := json.Unmarshal(e, &rerr); err != nil {
-				m.log.Error("Failed to decode \"error\" parameter from error redirect",
-					slog.String("method", r.Method),
-					slog.String("path", r.URL.Path),
-					slog.Int("status", 0),
-					slog.String("data", string(e)),
-				)
-				w.WriteHeader(http.StatusInternalServerError)
-				_, _ = w.Write([]byte(
-					fmt.Sprintf("Data %s\nError %s", string(e), err.Error()),
-				))
-				return
-			}
-
-			w.WriteHeader(rerr.StatusCode)
-			if err := m.page(rerr).Render(r.Context(), w); err != nil {
-				_, _ = w.Write(e)
-			}
-
+			ErrorDisplayer{m.log, m.page}.ServeHTTP(w, r)
 			return
 		}
 
@@ -222,6 +188,48 @@ func (m *ErrorMiddleware) Wrap(next http.Handler) http.Handler {
 			http.Redirect(w, r, u.String(), http.StatusTemporaryRedirect)
 		}
 	})
+}
+
+type ErrorDisplayer struct {
+	log  *slog.Logger
+	page ErrorMiddlewarePage
+}
+
+func (h ErrorDisplayer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	e, err := base64.URLEncoding.DecodeString(r.URL.Query().Get("error"))
+	if err != nil {
+		h.log.Error("Failed to decode \"error\" parameter from error redirect",
+			slog.String("method", r.Method),
+			slog.String("path", r.URL.Path),
+			slog.Int("status", 0),
+			slog.String("data", string(e)),
+		)
+		w.WriteHeader(http.StatusInternalServerError)
+		_, _ = w.Write([]byte(
+			fmt.Sprintf("Data %s\nError %s", string(e), err.Error()),
+		))
+		return
+	}
+
+	var rerr RouteError
+	if err := json.Unmarshal(e, &rerr); err != nil {
+		h.log.Error("Failed to decode \"error\" parameter from error redirect",
+			slog.String("method", r.Method),
+			slog.String("path", r.URL.Path),
+			slog.Int("status", 0),
+			slog.String("data", string(e)),
+		)
+		w.WriteHeader(http.StatusInternalServerError)
+		_, _ = w.Write([]byte(
+			fmt.Sprintf("Data %s\nError %s", string(e), err.Error()),
+		))
+		return
+	}
+
+	w.WriteHeader(rerr.StatusCode)
+	if err := h.page(rerr).Render(r.Context(), w); err != nil {
+		_, _ = w.Write(e)
+	}
 }
 
 func prefersHtml(h http.Header) bool {
