@@ -17,6 +17,7 @@ type LoggerMiddleware struct {
 }
 
 func NewLoggerMiddleware(l *slog.Logger) *LoggerMiddleware {
+	l = l.WithGroup("logger_middleware")
 	return &LoggerMiddleware{l}
 }
 
