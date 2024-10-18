@@ -9,6 +9,10 @@ import (
 
 type Middleware func(next http.Handler) http.Handler
 
+type MiddlewareStruct interface {
+	Wrap(next http.Handler) http.Handler
+}
+
 type MiddlewaredReponse struct {
 	w          http.ResponseWriter
 	statuses   []int
