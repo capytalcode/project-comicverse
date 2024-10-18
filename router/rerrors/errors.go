@@ -227,8 +227,11 @@ func (m *ErrorMiddleware) Wrap(next http.Handler) http.Handler {
 }
 
 func prefersHtml(h http.Header) bool {
+	if h.Get("Accept") == "" {
+		return false
+	}
 	return (strings.Contains(h.Get("Accept"), "text/html") ||
 		strings.Contains(h.Get("Accept"), "application/xhtml+xml") ||
-		strings.Contains(h.Get("Accept"), "application/xml")) ||
+		strings.Contains(h.Get("Accept"), "application/xml")) &&
 		!strings.Contains(h.Get("Accept"), "application/json")
 }
