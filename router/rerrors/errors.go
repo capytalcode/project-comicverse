@@ -188,8 +188,6 @@ func (m *ErrorMiddleware) Wrap(next http.Handler) http.Handler {
 				return
 			}
 
-			_, _ = w.Write(b)
-
 			return
 		}
 
