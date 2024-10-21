@@ -8,11 +8,7 @@ import (
 	"strconv"
 )
 
-type Middleware func(next http.Handler) http.Handler
-
-type MiddlewareStruct interface {
-	Wrap(next http.Handler) http.Handler
-}
+type Middleware = func(next http.Handler) http.Handler
 
 type MiddlewaredReponse struct {
 	w          http.ResponseWriter
@@ -89,10 +85,12 @@ func MultiResponseWriter(
 }
 
 func (w *multiResponseWriter) WriteHeader(status int) {
+	w.Header().Set("Status", strconv.Itoa(status))
 	w.response.WriteHeader(status)
 }
 
 func (w *multiResponseWriter) Write(p []byte) (int, error) {
+	w.WriteHeader(http.StatusOK)
 	for _, w := range w.writers {
 		n, err := w.Write(p)
 		if err != nil {

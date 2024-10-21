@@ -1,19 +1,19 @@
 package rerrors
 
 import (
-	"bytes"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"io"
 	"log/slog"
 	"net/http"
-	"net/url"
-	"strconv"
 	"strings"
 
-	"forge.capytal.company/capytalcode/project-comicverse/router/middleware"
 	"github.com/a-h/templ"
+)
+
+const (
+	ERROR_MIDDLEWARE_HEADER = "XX-Error-Middleware"
+	ERROR_VALUE_HEADER      = "X-Error-Value"
 )
 
 type RouteError struct {
@@ -45,11 +45,9 @@ func (rerr RouteError) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		rerr.Info = map[string]any{}
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-
 	j, err := json.Marshal(rerr)
 	if err != nil {
-		j, _ := json.Marshal(RouteError{
+		j, _ = json.Marshal(RouteError{
 			StatusCode: http.StatusInternalServerError,
 			Error:      "Failed to marshal error message to JSON",
 			Info: map[string]any{
@@ -57,12 +55,18 @@ func (rerr RouteError) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				"error":        err.Error(),
 			},
 		})
-		w.WriteHeader(http.StatusInternalServerError)
-		if _, err = w.Write(j); err != nil {
-			_, _ = w.Write([]byte("Failed to write error JSON string to body"))
-		}
+	}
+
+	if r.Header.Get(ERROR_MIDDLEWARE_HEADER) == "enable" && prefersHtml(r.Header) {
+		q := r.URL.Query()
+		q.Set("error", base64.URLEncoding.EncodeToString(j))
+		r.URL.RawQuery = q.Encode()
+
+		http.Redirect(w, r, r.URL.String(), http.StatusTemporaryRedirect)
 		return
 	}
+
+	w.Header().Set("Content-Type", "application/json")
 
 	w.WriteHeader(rerr.StatusCode)
 	if _, err = w.Write(j); err != nil {
@@ -71,124 +75,6 @@ func (rerr RouteError) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 type ErrorMiddlewarePage func(err RouteError) templ.Component
-
-type ErrorMiddleware struct {
-	page     ErrorMiddlewarePage
-	notfound ErrorMiddlewarePage
-	log      *slog.Logger
-}
-
-func NewErrorMiddleware(
-	p ErrorMiddlewarePage,
-	l *slog.Logger,
-	notfound ...ErrorMiddlewarePage,
-) *ErrorMiddleware {
-	var nf ErrorMiddlewarePage
-	if len(notfound) > 0 {
-		nf = notfound[0]
-	} else {
-		nf = p
-	}
-
-	l = l.WithGroup("error_middleware")
-
-	return &ErrorMiddleware{p, nf, l}
-}
-
-func (m *ErrorMiddleware) Wrap(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if uerr := r.URL.Query().Get("error"); uerr != "" {
-			ErrorDisplayer{m.log, m.page}.ServeHTTP(w, r)
-			return
-		}
-
-		var buf bytes.Buffer
-		mw := middleware.MultiResponseWriter(w, &buf)
-
-		next.ServeHTTP(mw, r)
-
-		if mw.Header().Get("Status") == "" {
-			m.log.Warn("Endpoint did not return a Status code",
-				slog.String("method", r.Method),
-				slog.String("path", r.URL.Path),
-				slog.String("status", mw.Header().Get("Status")),
-				slog.Any("data", buf),
-			)
-			return
-		}
-
-		status, err := strconv.Atoi(mw.Header().Get("Status"))
-		if err != nil {
-			m.log.Warn("Failed to parse Status code to a integer",
-				slog.String("method", r.Method),
-				slog.String("path", r.URL.Path),
-				slog.String("status", mw.Header().Get("Status")),
-				slog.String("data", err.Error()),
-			)
-			return
-		}
-
-		if status < 400 {
-			return
-		} else if status == 404 {
-			rerr := NotFound()
-
-			w.WriteHeader(rerr.StatusCode)
-
-			b, err := json.Marshal(rerr)
-			if err != nil {
-				_, _ = w.Write([]byte(
-					fmt.Sprintf("%#v", rerr),
-				))
-				return
-			}
-
-			if prefersHtml(r.Header) {
-				u, _ := url.Parse(r.URL.String())
-
-				q := u.Query()
-				q.Add("error", base64.URLEncoding.EncodeToString(b))
-				u.RawQuery = q.Encode()
-
-				http.Redirect(w, r, u.String(), http.StatusTemporaryRedirect)
-				return
-			}
-
-			return
-		}
-
-		body, err := io.ReadAll(&buf)
-		if err != nil {
-			m.log.Error("Failed to read from error body",
-				slog.String("method", r.Method),
-				slog.String("path", r.URL.Path),
-				slog.String("status", mw.Header().Get("Status")),
-				slog.Any("data", buf),
-			)
-			return
-		}
-
-		if mw.Header().Get("Content-Type") != "application/json" {
-			m.log.Warn("Endpoint didn't return a structured error",
-				slog.String("method", r.Method),
-				slog.String("path", r.URL.Path),
-				slog.String("status", mw.Header().Get("Status")),
-				slog.String("data", string(body)),
-			)
-			return
-		}
-
-		if prefersHtml(r.Header) {
-			u, _ := url.Parse(r.URL.String())
-
-			q := u.Query()
-			q.Add("error", base64.URLEncoding.EncodeToString(body))
-			u.RawQuery = q.Encode()
-
-			http.Redirect(w, r, u.String(), http.StatusTemporaryRedirect)
-		}
-	})
-}
 
 type ErrorDisplayer struct {
 	log  *slog.Logger
@@ -230,6 +116,42 @@ func (h ErrorDisplayer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if err := h.page(rerr).Render(r.Context(), w); err != nil {
 		_, _ = w.Write(e)
 	}
+}
+
+type ErrorMiddleware struct {
+	page     ErrorMiddlewarePage
+	notfound ErrorMiddlewarePage
+	log      *slog.Logger
+}
+
+func NewErrorMiddleware(
+	p ErrorMiddlewarePage,
+	l *slog.Logger,
+	notfound ...ErrorMiddlewarePage,
+) *ErrorMiddleware {
+	var nf ErrorMiddlewarePage
+	if len(notfound) > 0 {
+		nf = notfound[0]
+	} else {
+		nf = p
+	}
+
+	l = l.WithGroup("error_middleware")
+
+	return &ErrorMiddleware{p, nf, l}
+}
+
+func (m *ErrorMiddleware) Wrap(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		r.Header.Set(ERROR_MIDDLEWARE_HEADER, "enable")
+
+		if uerr := r.URL.Query().Get("error"); uerr != "" && prefersHtml(r.Header) {
+			ErrorDisplayer{m.log, m.page}.ServeHTTP(w, r)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
 }
 
 func prefersHtml(h http.Header) bool {
