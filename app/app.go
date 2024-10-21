@@ -11,7 +11,6 @@ import (
 	devPages "forge.capytal.company/capytalcode/project-comicverse/pages/dev"
 	"forge.capytal.company/capytalcode/project-comicverse/router"
 	"forge.capytal.company/capytalcode/project-comicverse/router/middleware"
-	"forge.capytal.company/capytalcode/project-comicverse/router/rerrors"
 )
 
 type App struct {
@@ -54,26 +53,25 @@ func NewApp(opts ...AppOpts) *App {
 }
 
 func (a *App) Run() {
-	router := router.NewRouter()
-
-	router.HandleRoutes(pages.PAGES)
-	router.Handle("/assets/", a.assets)
-
-	if a.dev {
-		router.HandleRoutes(devPages.PAGES)
-		router.AddMiddleware(middleware.DevMiddleware)
-	}
-
 	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
 		Level: slog.LevelDebug,
 	}))
 	mlogger := middleware.NewLoggerMiddleware(logger)
-	router.AddMiddleware(mlogger.Wrap)
 
-	mErrors := rerrors.NewErrorMiddleware(pages.ErrorPage{}.Component, logger)
-	router.AddMiddleware(mErrors.Wrap)
+	r := router.NewRouter()
 
-	if err := http.ListenAndServe(fmt.Sprintf(":%v", a.port), router); err != nil {
+	r.Use(mlogger.Wrap)
+	if a.dev {
+		r.Use(middleware.DevMiddleware)
+
+		r.Handle("/_dev", devPages.Routes())
+	}
+
+	r.Handle("/assets/", a.assets)
+
+	r.Handle("/", pages.Routes(logger))
+
+	if err := http.ListenAndServe(fmt.Sprintf(":%v", a.port), r); err != nil {
 		log.Fatal(err)
 	}
 }
