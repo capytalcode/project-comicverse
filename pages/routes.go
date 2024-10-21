@@ -8,7 +8,7 @@ import (
 	"forge.capytal.company/capytalcode/project-comicverse/router/rerrors"
 )
 
-func Routes(logger *slog.Logger) *router.Router {
+func Routes(logger *slog.Logger) router.Router {
 	r := router.NewRouter()
 
 	mErrors := rerrors.NewErrorMiddleware(ErrorPage{}.Component, logger)
