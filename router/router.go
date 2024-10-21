@@ -1,85 +1,64 @@
 package router
 
 import (
-	"fmt"
 	"net/http"
+	"path"
 
 	"forge.capytal.company/capytalcode/project-comicverse/router/middleware"
 )
 
 type Router struct {
 	mux         *http.ServeMux
-	serveHttp   http.HandlerFunc
 	middlewares []middleware.Middleware
+	handlers    map[string]http.Handler
 }
 
-type RouterOpts struct {
-	Mux *http.ServeMux
-}
-
-type Route struct {
-	Pattern string
-	Handler http.Handler
-}
-
-func NewRouter(opts ...RouterOpts) *Router {
-	var mux *http.ServeMux
-	if len(opts) > 0 {
-		mux = opts[0].Mux
-	} else {
-		mux = http.NewServeMux()
-	}
-
+func NewRouter(mux ...*http.ServeMux) *Router {
 	return &Router{
-		mux:         mux,
-		serveHttp:   mux.ServeHTTP,
-		middlewares: []middleware.Middleware{},
+		http.NewServeMux(),
+		[]middleware.Middleware{},
+		map[string]http.Handler{},
 	}
 }
 
-func (r *Router) Handle(pattern string, handler http.Handler) {
-	r.mux.Handle(pattern, handler)
-}
-
-func (r *Router) HandleFunc(pattern string, hf http.HandlerFunc) {
-	r.mux.HandleFunc(pattern, hf)
-}
-
-func (rt *Router) HandleRoutes(routes []Route) {
-	for _, r := range routes {
-		rt.Handle(r.Pattern, r.Handler)
+func (r *Router) Handle(p string, h http.Handler) {
+	if sr, ok := h.(*Router); ok {
+		for sp, sh := range sr.handlers {
+			wh := sh
+			if len(sr.middlewares) > 0 {
+				wh = sr.wrapMiddlewares(sr.middlewares, wh)
+			}
+			r.handle(path.Join(p, sp), wh)
+		}
+	} else {
+		r.handle(p, h)
 	}
 }
 
-func (r *Router) AddMiddleware(m middleware.Middleware) {
+func (r *Router) HandleFunc(p string, hf http.HandlerFunc) {
+	r.handle(p, hf)
+}
+
+func (r Router) handle(p string, h http.Handler) {
+	if len(r.middlewares) > 0 {
+		h = r.wrapMiddlewares(r.middlewares, h)
+	}
+	r.handlers[p] = h
+	r.mux.Handle(p, h)
+}
+
+func (r *Router) Use(m middleware.Middleware) {
 	r.middlewares = append(r.middlewares, m)
 }
 
-func (rt *Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if len(rt.middlewares) > 0 {
-		rt.serveHttp = rt.wrapMiddlewares(rt.middlewares, rt.serveHttp)
-	}
-	rt.serveHttp(w, r)
+func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	r.mux.ServeHTTP(w, req)
 }
 
-func (r *Router) wrapMiddlewares(ms []middleware.Middleware, h http.Handler) http.HandlerFunc {
-	wh := h
+func (r Router) wrapMiddlewares(ms []middleware.Middleware, h http.Handler) http.Handler {
+	hf := h
 	for _, m := range ms {
-		wh = m(wh)
+		hf = m(hf)
 	}
-
-	return func(w http.ResponseWriter, r *http.Request) {
-		mw := middleware.NewMiddlewaredResponse(w)
-		wh.ServeHTTP(mw, r)
-		if _, err := mw.ReallyWriteHeader(); err != nil {
-			_, _ = w.Write(
-				[]byte(
-					fmt.Sprintf(
-						"Error while trying to write middlewared response.\n%s",
-						err.Error(),
-					),
-				),
-			)
-		}
-	}
+	return hf
 }

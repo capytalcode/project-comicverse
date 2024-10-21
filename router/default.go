@@ -16,12 +16,8 @@ func HandleFunc(pattern string, handler http.HandlerFunc) {
 	DefaultRouter.HandleFunc(pattern, handler)
 }
 
-func HandleRoutes(routes []Route) {
-	DefaultRouter.HandleRoutes(routes)
-}
-
-func Middleware(m middleware.Middleware) {
-	DefaultRouter.AddMiddleware(m)
+func Use(m middleware.Middleware) {
+	DefaultRouter.Use(m)
 }
 
 func ServeHTTP(w http.ResponseWriter, r *http.Request) {
