@@ -61,10 +61,15 @@ func (a *App) Run() {
 	r := router.NewRouter()
 
 	r.Use(mlogger.Wrap)
-	if a.dev {
-		r.Use(middleware.DevMiddleware)
 
+	if a.dev {
+		logger.Info("RUNNING IN DEVELOPMENT MODE")
+
+		r.Use(middleware.DevMiddleware)
 		r.Handle("/_dev", devPages.Routes())
+
+	} else {
+		r.Use(middleware.CacheMiddleware)
 	}
 
 	r.Handle("/assets/", a.assets)
