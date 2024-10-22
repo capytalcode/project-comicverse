@@ -6,7 +6,9 @@ import (
 )
 
 func InternalError(errs ...error) RouteError {
+	err := errors.Join(errs...)
 	return NewRouteError(http.StatusInternalServerError, "Internal server error", map[string]any{
-		"errors": errors.Join(errs...),
+		"errors":      err,
+		"errors_desc": err.Error(),
 	})
 }
