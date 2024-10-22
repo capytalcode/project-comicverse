@@ -20,6 +20,7 @@ func Routes(logger *slog.Logger) router.Router {
 		if r.URL.Path != "/" {
 			rerrors.NotFound().ServeHTTP(w, r)
 		}
+
 	})
 
 	return r

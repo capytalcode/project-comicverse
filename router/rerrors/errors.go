@@ -20,6 +20,7 @@ type RouteError struct {
 	StatusCode int            `json:"status_code"`
 	Error      string         `json:"error"`
 	Info       map[string]any `json:"info"`
+	Endpoint   string
 }
 
 func NewRouteError(status int, error string, info ...map[string]any) RouteError {
@@ -110,6 +111,14 @@ func (h ErrorDisplayer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			fmt.Sprintf("Data %s\nError %s", string(e), err.Error()),
 		))
 		return
+	}
+
+	if rerr.Endpoint == "" {
+		q := r.URL.Query()
+		q.Del("error")
+		r.URL.RawQuery = q.Encode()
+
+		rerr.Endpoint = r.URL.String()
 	}
 
 	w.WriteHeader(rerr.StatusCode)
