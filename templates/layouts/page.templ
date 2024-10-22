@@ -1,7 +1,11 @@
 package layouts
 
 import (
+	"fmt"
+	"embed"
+
 	"forge.capytal.company/capytalcode/project-comicverse/configs"
+	"forge.capytal.company/capytalcode/project-comicverse/assets"
 )
 
 type PageInfo struct {
@@ -18,6 +22,18 @@ func pageInfo(info []PageInfo) PageInfo {
 		return info[0]
 	}
 	return PageInfo{}
+}
+
+templ LinkCSSFile(href string, fs embed.FS, file string) {
+	if configs.DEVELOPMENT {
+		<link rel="preload" href={ href } as="style"/>
+		<link rel="stylesheet" href={ href }/>
+	} else if f, err := fs.ReadFile(file); err != nil {
+		<link rel="preload" href={ href } as="style"/>
+		<link rel="stylesheet" href={ href }/>
+	} else {
+		@templ.Raw(fmt.Sprintf("<style>%s</style>", f))
+	}
 }
 
 templ Page(i ...PageInfo) {
@@ -47,14 +63,12 @@ templ Page(i ...PageInfo) {
 				<meta name="theme-color" content={ pageInfo(i).ThemeColor }/>
 			}
 			// Global styles
-			<link rel="preload" href="/assets/css/theme.css" as="style"/>
-			<link rel="stylesheet" href="/assets/css/theme.css"/>
-			<link rel="preload" href="/assets/css/uno.css" as="style"/>
-			<link rel="stylesheet" href="/assets/css/uno.css"/>
 			<link rel="preload" href="/assets/fonts/KarlaVF.woff2" as="font"/>
 			<link rel="preload" href="/assets/fonts/KarlaItalicVF.woff2" as="font"/>
 			<link rel="preload" href="/assets/fonts/PlayfairRomanVF.woff2" as="font"/>
 			<link rel="preload" href="/assets/fonts/PlayfairItalicVF.woff2" as="font"/>
+			@LinkCSSFile("/assets/css/theme.css", assets.ASSETS, "css/theme.css")
+			@LinkCSSFile("/assets/css/uno.css", assets.ASSETS, "css/uno.css")
 			// Global scripts
 			<script type="module" src="/assets/javascript/entry.js" defer></script>
 			// Additional heading
