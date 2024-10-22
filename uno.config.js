@@ -13,7 +13,7 @@ export default defineConfig({
 		entry: {
 			outFile: './assets/css/uno.css',
 			patterns: [
-				'./{pages,templates}/**/*.templ',
+				'./{handlers,templates}/**/*.templ',
 				'./assets/**/*.{js,css,html}',
 				'!./assets/css/uno.css',
 			],
