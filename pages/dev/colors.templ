@@ -26,26 +26,44 @@ templ (p *Colors) Component() {
 	@layouts.Page(layouts.PageInfo{
 		Heading: p.Heading(),
 	}) {
-		<main class="absolute w-screen h-screen top-0 left-0 bg-#000000">
-			<section>
-				<input id="accent-color-hue" class="w-93% mx-10" type="range" value="260" min="0" max="360"/>
-				@templ.Raw(p.html())
-			</section>
-			<section>
-				<button>Hello world</button>
-			</section>
-		</main>
+		<div class="m-10 flex flex-col gap-5 font-sans">
+			<article>
+				<input
+					id="accent-color-hue"
+					class="w-full"
+					type="range"
+					value="260"
+					min="0"
+					max="360"
+				/>
+				<details>
+					<summary class="font-bold">Pallete</summary>
+					<ul class="list-none p-0 flex flex-col gap-3">
+						@templ.Raw(p.html())
+					</ul>
+				</details>
+			</article>
+			<article class="grid grid-cols-3">
+				<section class="bg-neutral-20 p-5">
+					<button>Hello world</button>
+				</section>
+			</article>
+		</div>
 	}
 }
 
 func (p *Colors) html() string {
 	cs := []string{}
 	for _, c := range colors {
-		ss := []string{"<ul class=\"flex gap-2 list-none\">"}
+		ss := []string{"<li class=\"w-full\">" +
+			"<p class=\"mb-0\">" + c + "</p>" +
+			"<ul class=\"flex list-none p-0 w-full\">"}
 		for _, s := range scales {
-			ss = append(ss, fmt.Sprintf("<li style=\"background-color:var(--theme-%s-%s); width: 5rem; height: 5rem;\"></li>", c, s))
+			ss = append(ss, fmt.Sprintf("<li "+
+				"style=\"background-color:var(--theme-%s-%s); width: 10%%; height: 3rem;\""+
+				"></li>", c, s))
 		}
-		ss = append(ss, "</ul>")
+		ss = append(ss, "</ul></li>")
 
 		cs = append(cs, strings.Join(ss, ""))
 	}
