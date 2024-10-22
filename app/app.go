@@ -1,14 +1,17 @@
 package app
 
 import (
+	"context"
+	"errors"
 	"fmt"
-	"log"
 	"log/slog"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 
-	"forge.capytal.company/capytalcode/project-comicverse/pages"
-	devPages "forge.capytal.company/capytalcode/project-comicverse/pages/dev"
+	"forge.capytal.company/capytalcode/project-comicverse/handlers/pages"
+	devPages "forge.capytal.company/capytalcode/project-comicverse/handlers/pages/dev"
 	"forge.capytal.company/capytalcode/project-comicverse/router"
 	"forge.capytal.company/capytalcode/project-comicverse/router/middleware"
 )
@@ -17,6 +20,8 @@ type App struct {
 	dev    bool
 	port   int
 	assets http.Handler
+	logger *slog.Logger
+	server *http.Server
 }
 
 type AppOpts struct {
@@ -45,25 +50,33 @@ func NewApp(opts ...AppOpts) *App {
 		opts[0].Assets = d
 	}
 
-	return &App{
+	app := &App{
 		dev:    *opts[0].Dev,
 		port:   *opts[0].Port,
 		assets: opts[0].Assets,
 	}
+
+	app.setLogger()
+	app.setServer()
+
+	return app
 }
 
-func (a *App) Run() {
-	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+func (a *App) setLogger() {
+	a.logger = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
 		Level: slog.LevelDebug,
 	}))
-	mlogger := middleware.NewLoggerMiddleware(logger)
+}
+
+func (a *App) setServer() {
+	mlogger := middleware.NewLoggerMiddleware(a.logger)
 
 	r := router.NewRouter()
 
 	r.Use(mlogger.Wrap)
 
 	if a.dev {
-		logger.Info("RUNNING IN DEVELOPMENT MODE")
+		a.logger.Info("RUNNING IN DEVELOPMENT MODE")
 
 		r.Use(middleware.DevMiddleware)
 		r.Handle("/_dev", devPages.Routes())
@@ -73,9 +86,31 @@ func (a *App) Run() {
 	}
 
 	r.Handle("/assets/", a.assets)
-	r.Handle("/", pages.Routes(logger))
+	r.Handle("/", pages.Routes(a.logger))
 
-	if err := http.ListenAndServe(fmt.Sprintf(":%v", a.port), r); err != nil {
-		log.Fatal(err)
+	srv := http.Server{
+		Addr:    fmt.Sprintf(":%v", a.port),
+		Handler: r,
 	}
+
+	a.server = &srv
+}
+
+func (a *App) Run() {
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+
+	go func() {
+		if err := a.server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			a.logger.Error("Listen and serve returned error", slog.String("error", err.Error()))
+		}
+	}()
+
+	<-ctx.Done()
+	a.logger.Info("Gracefully shutting doing server")
+	if err := a.server.Shutdown(context.TODO()); err != nil {
+		a.logger.Error("Server shut down returned an error", slog.String("error", err.Error()))
+	}
+
+	a.logger.Info("FINAL")
 }

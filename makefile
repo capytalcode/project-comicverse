@@ -1,7 +1,7 @@
 
 PORT?=8080
 
-lint:
+lint: build/templ
 	go run github.com/golangci/golangci-lint/cmd/golangci-lint@v1.59.1 run
 	npx eslint .
 
