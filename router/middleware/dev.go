@@ -4,7 +4,6 @@ import (
 	"log/slog"
 	"math/rand"
 	"net/http"
-	"strconv"
 )
 
 func DevMiddleware(next http.Handler) http.Handler {
@@ -16,6 +15,16 @@ func DevMiddleware(next http.Handler) http.Handler {
 
 type LoggerMiddleware struct {
 	log *slog.Logger
+}
+
+type loggerReponse struct {
+	http.ResponseWriter
+	status int
+}
+
+func (lr *loggerReponse) WriteHeader(s int) {
+	lr.status = s
+	lr.ResponseWriter.WriteHeader(s)
 }
 
 func NewLoggerMiddleware(l *slog.Logger) *LoggerMiddleware {
@@ -34,27 +43,13 @@ func (l *LoggerMiddleware) Wrap(next http.Handler) http.Handler {
 			slog.String("path", r.URL.Path),
 		)
 
-		next.ServeHTTP(w, r)
+		lw := &loggerReponse{w, http.StatusOK}
+		next.ServeHTTP(lw, r)
 
-		s := w.Header().Get("Status")
-		if s == "" {
-			s = strconv.Itoa(http.StatusOK)
-		}
-
-		sc, err := strconv.Atoi(s)
-		if err != nil {
-			l.log.Error("INVALID REQUEST STATUS",
-				slog.String("id", id),
-				slog.String("status", s),
-				slog.String("method", r.Method),
-				slog.String("path", r.URL.Path),
-			)
-			return
-		}
-		if sc >= 400 {
+		if lw.status >= 400 {
 			l.log.Warn("ERR REQUEST",
 				slog.String("id", id),
-				slog.String("status", s),
+				slog.Int("status", lw.status),
 				slog.String("method", r.Method),
 				slog.String("path", r.URL.Path),
 			)
@@ -63,7 +58,7 @@ func (l *LoggerMiddleware) Wrap(next http.Handler) http.Handler {
 
 		l.log.Info("END REQUEST",
 			slog.String("id", id),
-			slog.String("status", s),
+			slog.Int("status", lw.status),
 			slog.String("method", r.Method),
 			slog.String("path", r.URL.Path),
 		)

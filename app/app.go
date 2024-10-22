@@ -10,6 +10,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"forge.capytal.company/capytalcode/project-comicverse/configs"
 	"forge.capytal.company/capytalcode/project-comicverse/handlers/pages"
 	devPages "forge.capytal.company/capytalcode/project-comicverse/handlers/pages/dev"
 	"forge.capytal.company/capytalcode/project-comicverse/router"
@@ -56,6 +57,8 @@ func NewApp(opts ...AppOpts) *App {
 		assets: opts[0].Assets,
 	}
 
+	configs.DEVELOPMENT = app.dev
+
 	app.setLogger()
 	app.setServer()
 
@@ -75,7 +78,7 @@ func (a *App) setServer() {
 
 	r.Use(mlogger.Wrap)
 
-	if a.dev {
+	if configs.DEVELOPMENT {
 		a.logger.Info("RUNNING IN DEVELOPMENT MODE")
 
 		r.Use(middleware.DevMiddleware)
