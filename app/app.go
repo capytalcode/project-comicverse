@@ -10,6 +10,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"forge.capytal.company/capytalcode/project-comicverse/assets"
 	"forge.capytal.company/capytalcode/project-comicverse/configs"
 	"forge.capytal.company/capytalcode/project-comicverse/handlers/pages"
 	devPages "forge.capytal.company/capytalcode/project-comicverse/handlers/pages/dev"
@@ -20,9 +21,9 @@ import (
 type App struct {
 	dev    bool
 	port   int
-	assets http.Handler
 	logger *slog.Logger
 	server *http.Server
+	assets http.Handler
 }
 
 type AppOpts struct {
@@ -44,11 +45,6 @@ func NewApp(opts ...AppOpts) *App {
 	if opts[0].Port == nil {
 		d := 8080
 		opts[0].Port = &d
-	}
-
-	if opts[0].Assets == nil {
-		d := http.FileServer(http.Dir("./assets"))
-		opts[0].Assets = d
 	}
 
 	app := &App{
@@ -83,12 +79,16 @@ func (a *App) setServer() {
 
 		r.Use(middleware.DevMiddleware)
 		r.Handle("/_dev", devPages.Routes())
-
 	} else {
 		r.Use(middleware.CacheMiddleware)
 	}
 
-	r.Handle("/assets/", a.assets)
+	if configs.DEVELOPMENT && a.assets != nil {
+		r.Handle("/assets/", a.assets)
+	} else {
+		r.Handle("/assets/", http.StripPrefix("/assets/", http.FileServerFS(assets.ASSETS)))
+	}
+
 	r.Handle("/", pages.Routes(a.logger))
 
 	srv := http.Server{

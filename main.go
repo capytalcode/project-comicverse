@@ -1,7 +1,6 @@
 package main
 
 import (
-	"embed"
 	"flag"
 	"net/http"
 	"os"
@@ -10,13 +9,9 @@ import (
 	"forge.capytal.company/capytalcode/project-comicverse/app"
 )
 
-//go:embed assets
-var assetsFolder embed.FS
-
 var (
-	port   *int
-	dev    *bool
-	assets *string
+	port *int
+	dev  *bool
 )
 
 func init() {
@@ -39,28 +34,15 @@ func init() {
 		d = false
 	}
 	dev = flag.Bool("dev", d, "Run the application in development mode")
-
-	assetsEnv := os.Getenv("COMICVERSE_ASSETS")
-	if assetsEnv == "" {
-		assetsEnv = "./assets"
-	}
-	assets = flag.String("assets", assetsEnv, "The directory for the development assets")
 }
 
 func main() {
 	flag.Parse()
 
-	var assetsFS http.Handler
-	if *dev {
-		assetsFS = http.StripPrefix("/assets/", http.FileServer(http.Dir(*assets)))
-	} else {
-		assetsFS = http.FileServerFS(assetsFolder)
-	}
-
 	app := app.NewApp(app.AppOpts{
 		Port:   port,
 		Dev:    dev,
-		Assets: assetsFS,
+		Assets: http.StripPrefix("/assets/", http.FileServer(http.Dir("./assets"))),
 	})
 
 	app.Run()
