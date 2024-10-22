@@ -23,6 +23,7 @@ func pageInfo(info []PageInfo) PageInfo {
 templ Page(i ...PageInfo) {
 	<html lang="en-US">
 		<head>
+			<meta charset="utf-8"/>
 			// Page information
 			if pageInfo(i).Title != "" {
 				<title>{ pageInfo(i).Title + " - " + configs.APP_NAME }</title>
@@ -46,8 +47,14 @@ templ Page(i ...PageInfo) {
 				<meta name="theme-color" content={ pageInfo(i).ThemeColor }/>
 			}
 			// Global styles
-			<link href="/assets/css/theme.css" rel="stylesheet"/>
-			<link href="/assets/css/uno.css" rel="stylesheet"/>
+			<link rel="preload" href="/assets/css/theme.css" as="style"/>
+			<link rel="stylesheet" href="/assets/css/theme.css"/>
+			<link rel="preload" href="/assets/css/uno.css" as="style"/>
+			<link rel="stylesheet" href="/assets/css/uno.css"/>
+			<link rel="preload" href="/assets/fonts/KarlaVF.woff2" as="font"/>
+			<link rel="preload" href="/assets/fonts/KarlaItalicVF.woff2" as="font"/>
+			<link rel="preload" href="/assets/fonts/PlayfairRomanVF.woff2" as="font"/>
+			<link rel="preload" href="/assets/fonts/PlayfairItalicVF.woff2" as="font"/>
 			// Global scripts
 			<script type="module" src="/assets/js/entry.js" defer></script>
 			// Additional heading
@@ -55,8 +62,10 @@ templ Page(i ...PageInfo) {
 				@pageInfo(i).Heading
 			}
 		</head>
-		<body>
-			{ children... }
+		<body style="--accent-color:#111">
+			<main class="absolute w-screen min-h-screen top-0 left-0 bg-neutral-10">
+				{ children... }
+			</main>
 		</body>
 	</html>
 }

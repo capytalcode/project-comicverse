@@ -40,10 +40,10 @@ func NewApp(opts ...AppOpts) *App {
 		opts[0].Port = &d
 	}
 
-	// if opts[0].Assets == nil {
-	// d := http.Dir("./assets")
-	// opts[0].Assets = d
-	// }
+	if opts[0].Assets == nil {
+		d := http.FileServer(http.Dir("./assets"))
+		opts[0].Assets = d
+	}
 
 	return &App{
 		dev:    *opts[0].Dev,
@@ -73,7 +73,6 @@ func (a *App) Run() {
 	}
 
 	r.Handle("/assets/", a.assets)
-
 	r.Handle("/", pages.Routes(logger))
 
 	if err := http.ListenAndServe(fmt.Sprintf(":%v", a.port), r); err != nil {

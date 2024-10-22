@@ -1,3 +1,32 @@
+@font-face {
+	font-family: "Karla";
+	font-style: normal;
+	src: url("/assets/fonts/KarlaVF.woff2") format("woff2"),
+		url("/assets/fonts/KarlaVF.ttf") format("truetype"),
+		url("/assets/fonts/KarlaMedium.otf") format("opentype");
+}
+@font-face {
+	font-family: "Karla";
+	font-style: italic;
+	src: url("/assets/fonts/KarlaItalicVF.woff2") format("woff2"),
+		url("/assets/fonts/KarlaItalicVF.ttf") format("truetype"),
+		url("/assets/fonts/KarlaItalicMedium.otf") format("opentype");
+}
+@font-face {
+	font-family: "Playfair";
+	font-style: normal;
+	src: url("/assets/fonts/PlayfairRomanVF.woff2") format("woff2"),
+		url("/assets/fonts/PlayfairRomanVF.ttf") format("truetype"),
+		url("/assets/fonts/PlayfairDisplay.otf") format("opentype");
+}
+@font-face {
+	font-family: "Playfair";
+	font-style: italic;
+	src: url("/assets/fonts/PlayfairItalicVF.woff2") format("woff2"),
+		url("/assets/fonts/PlayfairItalicVF.ttf") format("truetype"),
+		url("/assets/fonts/PlayfairDisplayItalic.otf") format("opentype");
+}
+
 :root * {
 	--theme-accent-hue: var(--user-theme-accent-hue, 280);
 	--theme-accent-saturation: var(--user-theme-accent-saturation, 95%);

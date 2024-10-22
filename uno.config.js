@@ -27,18 +27,14 @@ export default defineConfig({
 		}),
 		presetWebFonts({
 			fonts: {
-				cal: {
-					name: 'Cal Sans',
-					provider: 'none',
-				},
-				mono: {
-					name: 'Fira Code',
+				display: {
+					name: 'Playfair',
 				},
 				sans: {
-					name: 'Inter',
+					name: 'Karla',
 				},
 			},
-			provider: 'bunny',
+			provider: 'none',
 		}),
 	],
 	theme: {
