@@ -12,6 +12,12 @@ func MissingParameters(params []string) RouteError {
 	})
 }
 
+func MissingCookies(cookies []string) RouteError {
+	return NewRouteError(http.StatusBadRequest, "Missing cookies", map[string]any{
+		"missing_cookies": cookies,
+	})
+}
+
 func MethodNowAllowed(method string, allowedMethods []string) RouteError {
 	return NewRouteError(http.StatusMethodNotAllowed, "Method not allowed", map[string]any{
 		"method":          method,

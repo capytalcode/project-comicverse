@@ -5,11 +5,41 @@ import (
 
 	"forge.capytal.company/capytalcode/project-comicverse/router/rerrors"
 	"forge.capytal.company/capytalcode/project-comicverse/templates/layouts"
+	"forge.capytal.company/capytalcode/project-comicverse/router/cookies"
+	"errors"
+	"log"
 )
 
 type Dashboard struct{}
 
+type DashboardCookie struct {
+	Hello string `cookie:"dashboard-cookie"`
+	Bool  bool
+	Test  int
+}
+
 func (p *Dashboard) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	hasCookie := true
+
+	var c DashboardCookie
+	if err := cookies.UnmarshalRequest(r, &c); errors.Is(err, cookies.ErrNoCookie) {
+		hasCookie = false
+		c = DashboardCookie{Hello: "Hello world", Bool: true, Test: 69420}
+	} else if err != nil {
+		rerrors.InternalError(err).ServeHTTP(w, r)
+		return
+	} else {
+		hasCookie = true
+	}
+
+	log.Print(hasCookie, c)
+
+	if ck, err := cookies.Marshal(c); err != nil {
+		rerrors.InternalError(err).ServeHTTP(w, r)
+	} else {
+		http.SetCookie(w, ck)
+	}
+
 	if err := p.Component().Render(r.Context(), w); err != nil {
 		rerrors.InternalError(err).ServeHTTP(w, r)
 		return
