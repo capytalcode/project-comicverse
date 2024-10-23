@@ -63,6 +63,14 @@ run: build
 	./.dist/app
 
 clean:
-	if [[ -d "dist" ]]; then rm -r ./dist; fi
+	# Remove templ generated files
+	find -type f -iname '*_templ.go' -delete \
+		-o -type f -iname '*_templ.txt' -delete
+
+	# Remove UnoCSS generated file
+	rm ./assets/css/uno.css
+
+	# Remove generated directories
+	if [[ -d ".dist" ]]; then rm -r ./.dist; fi
 	if [[ -d "tmp" ]]; then rm -r ./tmp; fi
 	if [[ -d "bin" ]]; then rm -r ./bin; fi
