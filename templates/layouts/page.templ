@@ -71,6 +71,15 @@ templ Page(i ...PageInfo) {
 			@LinkCSSFile("/assets/css/uno.css", assets.ASSETS, "css/uno.css")
 			// Global scripts
 			<script type="module" src="/assets/lib/entry.js" defer></script>
+			if configs.DEVELOPMENT {
+				<script type="module">
+					import htmx from '/assets/lib/htmx.js'; htmx.logAll(); window.htmx = htmx;
+				</script>
+			} else {
+				<script type="module">
+					import htmx from '/assets/lib/htmx.js'; htmx.logNone(); window.htmx = htmx;
+				</script>
+			}
 			// Additional heading
 			if pageInfo(i).Heading != nil {
 				@pageInfo(i).Heading
