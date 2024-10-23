@@ -5,11 +5,11 @@ lint: build/templ
 	go run github.com/golangci/golangci-lint/cmd/golangci-lint@v1.59.1 run
 	npx eslint .
 
-lint/fix:
+lint/fix: build/templ
 	go run github.com/golangci/golangci-lint/cmd/golangci-lint@v1.59.1 run
 	npx eslint --fix .
 
-fmt:
+fmt: build/templ
 	go fmt ./.
 	go run github.com/a-h/templ/cmd/templ@v0.2.707 fmt .
 	go run mvdan.cc/gofumpt@v0.7.0 -l -w .
