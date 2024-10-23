@@ -4,5 +4,5 @@ import (
 	"embed"
 )
 
-//go:embed css fonts javascript
+//go:embed css fonts lib
 var ASSETS embed.FS

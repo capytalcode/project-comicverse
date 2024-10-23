@@ -70,7 +70,7 @@ templ Page(i ...PageInfo) {
 			@LinkCSSFile("/assets/css/theme.css", assets.ASSETS, "css/theme.css")
 			@LinkCSSFile("/assets/css/uno.css", assets.ASSETS, "css/uno.css")
 			// Global scripts
-			<script type="module" src="/assets/javascript/entry.js" defer></script>
+			<script type="module" src="/assets/lib/entry.js" defer></script>
 			// Additional heading
 			if pageInfo(i).Heading != nil {
 				@pageInfo(i).Heading
