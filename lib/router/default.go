@@ -3,7 +3,7 @@ package router
 import (
 	"net/http"
 
-	"forge.capytal.company/capytalcode/project-comicverse/router/middleware"
+	"forge.capytal.company/capytalcode/project-comicverse/lib/middleware"
 )
 
 var DefaultRouter = NewRouter()

@@ -14,8 +14,8 @@ import (
 	"forge.capytal.company/capytalcode/project-comicverse/configs"
 	"forge.capytal.company/capytalcode/project-comicverse/handlers/pages"
 	devPages "forge.capytal.company/capytalcode/project-comicverse/handlers/pages/dev"
-	"forge.capytal.company/capytalcode/project-comicverse/router"
-	"forge.capytal.company/capytalcode/project-comicverse/router/middleware"
+	"forge.capytal.company/capytalcode/project-comicverse/lib/middleware"
+	"forge.capytal.company/capytalcode/project-comicverse/lib/router"
 )
 
 type App struct {

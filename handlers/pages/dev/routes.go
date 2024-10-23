@@ -3,7 +3,7 @@ package dev
 import (
 	"net/http"
 
-	"forge.capytal.company/capytalcode/project-comicverse/router"
+	"forge.capytal.company/capytalcode/project-comicverse/lib/router"
 )
 
 func Routes() router.Router {

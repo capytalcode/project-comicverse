@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"path"
 
-	"forge.capytal.company/capytalcode/project-comicverse/router/middleware"
+	"forge.capytal.company/capytalcode/project-comicverse/lib/middleware"
 )
 
 type Router interface {

@@ -4,8 +4,8 @@ import (
 	"log/slog"
 	"net/http"
 
-	"forge.capytal.company/capytalcode/project-comicverse/router"
-	"forge.capytal.company/capytalcode/project-comicverse/router/rerrors"
+	"forge.capytal.company/capytalcode/project-comicverse/lib/router"
+	"forge.capytal.company/capytalcode/project-comicverse/lib/router/rerrors"
 )
 
 func Routes(logger *slog.Logger) router.Router {
@@ -20,7 +20,6 @@ func Routes(logger *slog.Logger) router.Router {
 		if r.URL.Path != "/" {
 			rerrors.NotFound().ServeHTTP(w, r)
 		}
-
 	})
 
 	return r
