@@ -12,6 +12,14 @@ import (
 	"time"
 )
 
+type Marshaler interface {
+	MarshalCookie() (*http.Cookie, error)
+}
+
+type Unmarshaler interface {
+	UnmarshalCookie(*http.Cookie) error
+}
+
 var (
 	ErrDecodeBase64 = errors.New("Failed to decode base64 string from cookie value")
 	ErrMarshal      = errors.New("Failed to marhal JSON value for cookie value")
@@ -27,6 +35,10 @@ var COOKIE_EXPIRE_VALID_FORMATS = []string{
 }
 
 func Marshal(v any) (*http.Cookie, error) {
+	if m, ok := v.(Marshaler); ok {
+		return m.MarshalCookie()
+	}
+
 	c, err := marshalValue(v)
 	if err != nil {
 		return c, err
@@ -40,6 +52,10 @@ func Marshal(v any) (*http.Cookie, error) {
 }
 
 func Unmarshal(c *http.Cookie, v any) error {
+	if m, ok := v.(Unmarshaler); ok {
+		return m.UnmarshalCookie(c)
+	}
+
 	value := c.Value
 	b, err := base64.URLEncoding.DecodeString(value)
 	if err != nil {
