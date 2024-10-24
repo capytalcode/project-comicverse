@@ -39,6 +39,15 @@ func Marshal(v any) (*http.Cookie, error) {
 	return c, err
 }
 
+func MarshalToWriter(v any, w http.ResponseWriter) error {
+	if ck, err := Marshal(v); err != nil {
+		return err
+	} else {
+		http.SetCookie(w, ck)
+	}
+	return nil
+}
+
 func Unmarshal(c *http.Cookie, v any) error {
 	if m, ok := v.(Unmarshaler); ok {
 		return m.UnmarshalCookie(c)

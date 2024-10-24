@@ -39,10 +39,8 @@ func (p *Dashboard) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	log.Print(hasCookie, c)
 
-	if ck, err := cookies.Marshal(c); err != nil {
+	if err := cookies.MarshalToWriter(c, w); err != nil {
 		rerrors.InternalError(err).ServeHTTP(w, r)
-	} else {
-		http.SetCookie(w, ck)
 	}
 
 	if err := p.Component().Render(r.Context(), w); err != nil {
