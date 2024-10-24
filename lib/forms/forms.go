@@ -12,6 +12,10 @@ import (
 	"forge.capytal.company/capytalcode/project-comicverse/lib/router/rerrors"
 )
 
+type Unmarshaler interface {
+	UnmarshalForm(r *http.Request) error
+}
+
 func Unmarshal(r *http.Request, v any) (err error) {
 	if u, ok := v.(Unmarshaler); ok {
 		return u.UnmarshalForm(r)
