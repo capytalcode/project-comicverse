@@ -73,6 +73,18 @@ func UnmarshalRequest(r *http.Request, v any) error {
 	return Unmarshal(c, v)
 }
 
+func UnmarshalIfRequest(r *http.Request, v any) (bool, error) {
+	if err := UnmarshalRequest(r, v); err != nil {
+		if _, ok := err.(ErrNoCookie); ok {
+			return false, nil
+		} else {
+			return true, err
+		}
+	} else {
+		return true, nil
+	}
+}
+
 func RerrUnmarshalCookie(err error) rerrors.RouteError {
 	if e, ok := err.(ErrNoCookie); ok {
 		return rerrors.MissingCookies([]string{e.name})
