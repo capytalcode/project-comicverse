@@ -22,27 +22,6 @@ type Unmarshaler interface {
 	UnmarshalCookie(*http.Cookie) error
 }
 
-var (
-	ErrDecodeBase64 = errors.New("Failed to decode base64 string from cookie value")
-	ErrMarshal      = errors.New("Failed to marhal JSON value for cookie value")
-	ErrUnmarshal    = errors.New("Failed to unmarshal JSON value from cookie value")
-	ErrReflectPanic = errors.New("Reflect panic while trying to get tag from value")
-	ErrMissingName  = errors.New("Failed to get name of cookie")
-)
-
-type ErrNoCookie struct {
-	name string
-}
-
-func (e ErrNoCookie) Error() string {
-	return fmt.Sprintf("Cookie \"%s\" missing from request", e.name)
-}
-
-var COOKIE_EXPIRE_VALID_FORMATS = []string{
-	time.DateOnly, time.DateTime,
-	time.RFC1123, time.RFC1123Z,
-}
-
 func Marshal(v any) (*http.Cookie, error) {
 	if m, ok := v.(Marshaler); ok {
 		return m.MarshalCookie()
@@ -113,6 +92,11 @@ func marshalValue(v any) (*http.Cookie, error) {
 	return &http.Cookie{
 		Value: s,
 	}, nil
+}
+
+var COOKIE_EXPIRE_VALID_FORMATS = []string{
+	time.DateOnly, time.DateTime,
+	time.RFC1123, time.RFC1123Z,
 }
 
 func setCookieProps(c *http.Cookie, v any) error {
@@ -274,4 +258,20 @@ func timeParseMultiple(v string, formats ...string) (time.Time, error) {
 	}
 
 	return time.Time{}, errs[len(errs)-1]
+}
+
+var (
+	ErrDecodeBase64 = errors.New("Failed to decode base64 string from cookie value")
+	ErrMarshal      = errors.New("Failed to marhal JSON value for cookie value")
+	ErrUnmarshal    = errors.New("Failed to unmarshal JSON value from cookie value")
+	ErrReflectPanic = errors.New("Reflect panic while trying to get tag from value")
+	ErrMissingName  = errors.New("Failed to get name of cookie")
+)
+
+type ErrNoCookie struct {
+	name string
+}
+
+func (e ErrNoCookie) Error() string {
+	return fmt.Sprintf("Cookie \"%s\" missing from request", e.name)
 }
