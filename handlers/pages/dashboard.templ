@@ -33,7 +33,7 @@ func (p *Dashboard) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	hasCookie := true
 
 	var c DashboardCookie
-	if err := cookies.UnmarshalRequest(r, &c); errors.Is(err, cookies.ErrNoCookie) {
+	if err := cookies.UnmarshalRequest(r, &c); errors.Is(err, cookies.ErrNoCookie{}) {
 		hasCookie = false
 		c = DashboardCookie{Hello: "Hello world", Bool: true, Test: 69420}
 	} else if err != nil {

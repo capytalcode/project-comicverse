@@ -10,6 +10,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"forge.capytal.company/capytalcode/project-comicverse/lib/router/rerrors"
 )
 
 type Marshaler interface {
@@ -26,8 +28,15 @@ var (
 	ErrUnmarshal    = errors.New("Failed to unmarshal JSON value from cookie value")
 	ErrReflectPanic = errors.New("Reflect panic while trying to get tag from value")
 	ErrMissingName  = errors.New("Failed to get name of cookie")
-	ErrNoCookie     = http.ErrNoCookie
 )
+
+type ErrNoCookie struct {
+	name string
+}
+
+func (e ErrNoCookie) Error() string {
+	return fmt.Sprintf("Cookie \"%s\" missing from request", e.name)
+}
 
 var COOKIE_EXPIRE_VALID_FORMATS = []string{
 	time.DateOnly, time.DateTime,
@@ -76,11 +85,21 @@ func UnmarshalRequest(r *http.Request, v any) error {
 	}
 
 	c, err := r.Cookie(name)
-	if err != nil {
+	if errors.Is(err, http.ErrNoCookie) {
+		return ErrNoCookie{name}
+	} else if err != nil {
 		return err
 	}
 
 	return Unmarshal(c, v)
+}
+
+func RerrUnmarshalCookie(err error) rerrors.RouteError {
+	if e, ok := err.(ErrNoCookie); ok {
+		return rerrors.MissingCookies([]string{e.name})
+	} else {
+		return rerrors.InternalError(err)
+	}
 }
 
 func marshalValue(v any) (*http.Cookie, error) {
