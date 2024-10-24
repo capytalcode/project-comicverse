@@ -2,8 +2,10 @@
 
 /**
  * @copyright Big Sky Software 2024
- * @license 0-clause
+ * @copyright Big Sky Software 2024
+ * @license 0BSD
  * @link https://github.com/bigskysoftware/htmx/blob/master/dist/htmx.esm.js
+ * @author Big Sky Software <https://github.com/bigskysoftware>
  *
  * This source code is copied from HTMX's GitHub repository, located at
  * https://github.com/bigskysoftware/htmx/blob/master/dist/htmx.esm.js.
@@ -27,6 +29,8 @@
  * OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  * @author Big Sky Software <https://github.com/bigskysoftware>
  */
+
+/* eslint-disable */
 
 var htmx = (function () {
 	'use strict';

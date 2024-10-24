@@ -1,24 +1,25 @@
 // @ts-nocheck
 
 /**
- * @license 0-clause
+ * @copyright Big Sky Software 2024
+ * @license 0BSD
+ * @link https://github.com/bigskysoftware/htmx/blob/master/dist/htmx.d.ts
  * @copyright Big Sky Software 2024
  * @author Big Sky Software <https://github.com/bigskysoftware>
- * @link https://github.com/bigskysoftware/htmx/blob/master/dist/htmx.d.ts
  *
  * This source code is copied from HTMX's GitHub repository, located at
- * https://github.com/bigskysoftware/htmx/blob/master/dist/htmx.esm.js. 
+ * https://github.com/bigskysoftware/htmx/blob/master/dist/htmx.esm.js.
  *
- * This source code and the original are licensed under the Zero-Clause BSD license, 
+ * This source code and the original are licensed under the Zero-Clause BSD license,
  * which a  copy is available in the original [GitHub](https://github.com/bigskysoftware/htmx/blob/master/LICENSE)
  * and here below:
  *
  * Zero-Clause BSD
  * =============
- * 
+ *
  * Permission to use, copy, modify, and/or distribute this software for
  * any purpose with or without fee is hereby granted.
- *  
+ *
  * THE SOFTWARE IS PROVIDED “AS IS” AND THE AUTHOR DISCLAIMS ALL
  * WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES
  * OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE
@@ -29,7 +30,6 @@
  */
 
 /* eslint-disable */
-
 
 export default htmx;
 export type HttpVerb = "get" | "head" | "post" | "put" | "delete" | "connect" | "options" | "trace" | "patch";
@@ -237,4 +237,3 @@ declare namespace htmx {
     let _: (str: string) => any;
     let version: string;
 }
-
