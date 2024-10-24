@@ -9,6 +9,9 @@ import (
 	"strconv"
 	"strings"
 
+	"forge.capytal.company/capytalcode/project-comicverse/lib/router/rerrors"
+)
+
 func Unmarshal(r *http.Request, v any) (err error) {
 	if u, ok := v.(Unmarshaler); ok {
 		return u.UnmarshalForm(r)
@@ -89,6 +92,16 @@ func Unmarshal(r *http.Request, v any) (err error) {
 	}
 
 	return nil
+}
+
+func RerrUnsmarshal(err error) rerrors.RouteError {
+	if e, ok := err.(*ErrMissingRequiredValue); ok {
+		return rerrors.MissingParameters([]string{e.value})
+	} else if e, ok := err.(*ErrInvalidValueType); ok {
+		return rerrors.BadRequest(e.Error())
+	} else {
+		return rerrors.InternalError(err)
+	}
 }
 
 func setFieldValue(rv reflect.Value, v string) error {

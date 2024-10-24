@@ -4,13 +4,19 @@ import (
 	"net/http"
 	"errors"
 	"log"
+	"strconv"
 
 	"forge.capytal.company/capytalcode/project-comicverse/lib/router/rerrors"
 	"forge.capytal.company/capytalcode/project-comicverse/lib/cookies"
+	"forge.capytal.company/capytalcode/project-comicverse/lib/forms"
 	"forge.capytal.company/capytalcode/project-comicverse/templates/layouts"
 )
 
-type Dashboard struct{}
+type Dashboard struct {
+	Message  string  `form:"message"`
+	Limit    int     `form:"limit"`
+	Optional *string `form:"optional"`
+}
 
 type DashboardCookie struct {
 	Hello string `cookie:"dashboard-cookie"`
@@ -19,6 +25,11 @@ type DashboardCookie struct {
 }
 
 func (p *Dashboard) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if err := forms.Unmarshal(r, p); err != nil {
+		forms.RerrUnsmarshal(err).ServeHTTP(w, r)
+		return
+	}
+
 	hasCookie := true
 
 	var c DashboardCookie
@@ -49,9 +60,13 @@ func (p *Dashboard) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 templ (p *Dashboard) Component() {
 	@layouts.Page() {
 		<div class="text-danger-100 font-sans">
-			<p>Hello world</p>
-			<p>test</p>
-			<p>test</p>
+			<p>{ p.Message }</p>
+			<p>{ strconv.Itoa(p.Limit) }</p>
+			if p.Optional != nil {
+				<p>{ *p.Optional }</p>
+			} else {
+				<p>nil</p>
+			}
 		</div>
 	}
 }
