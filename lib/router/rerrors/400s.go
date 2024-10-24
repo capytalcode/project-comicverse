@@ -2,8 +2,21 @@ package rerrors
 
 import (
 	"net/http"
+	"strconv"
 )
 
+func BadRequest(reason ...string) RouteError {
+	info := map[string]any{}
+
+	if len(reason) == 1 {
+		info["reason"] = reason[0]
+	} else if len(reason) > 1 {
+		for i, r := range reason {
+			info["reason_"+strconv.Itoa(i)] = r
+		}
+	}
+
+	return NewRouteError(http.StatusBadRequest, "Bad Request", info)
 }
 
 func NotFound() RouteError {
