@@ -1,5 +1,4 @@
 import js from '@eslint/js';
-import markdown from '@eslint/markdown';
 import stylistic from '@stylistic/eslint-plugin';
 import jsdoc from 'eslint-plugin-jsdoc';
 // @ts-expect-error eslint-plugin-jsdoc does not have type definitions
@@ -30,7 +29,6 @@ const config = [
 			'dist',
 		],
 	},
-
 	// Logic plugins
 	js.configs.recommended,
 	(/** @type {Config} */ (ts.configs.eslintRecommended)),
@@ -109,9 +107,9 @@ const config = [
 			'import/no-useless-path-segments': 'error',
 			'import/no-webpack-loader-syntax': 'error',
 			'import/order': 'off',
-
 			// JSDoc
 			'jsdoc/check-indentation': 'warn',
+
 			'jsdoc/check-line-alignment': 'warn',
 			'jsdoc/check-syntax': 'warn',
 			'jsdoc/check-template-names': 'warn',
@@ -160,7 +158,6 @@ const config = [
 		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 		...json.configs['recommended'],
 	},
-	...(/** @type {{recommended: Config[]}} */ (markdown.configs).recommended),
 ];
 
 /**

@@ -300,7 +300,7 @@ var htmx = (function () {
 		 * Returns the input values that would resolve for a given element via the htmx value resolution mechanism.
 		 * @param {Element} elt - The element to resolve values on.
 		 * @param {HttpVerb} type - The request type (e.g. **get** or **post**) non-GET's will include the enclosing form of the element. Defaults to **post**.
-		 * @returns {Object}
+		 * @returns {object}
 		 * @see https://htmx.org/api/#values
 		 */
 		values: function (elt, type) {
@@ -937,7 +937,7 @@ var htmx = (function () {
 	/**
 	 * Finds an element matching the selector.
 	 * @param {ParentNode|string} eltOrSelector - The root element to find the matching element in, inclusive | The selector to match.
-	 * @param {string} [selector] - the selector to match.
+	 * @param {string} [selector] - The selector to match.
 	 * @returns {Element|null}
 	 * @see https://htmx.org/api/#find
 	 */
@@ -1051,7 +1051,7 @@ var htmx = (function () {
 	 * Removes a class from the given element.
 	 * @param {Node|string} node - Element to remove the class from.
 	 * @param {string} clazz - The class to remove.
-	 * @param {number} [delay] - the delay (in milliseconds before class is removed)
+	 * @param {number} [delay] - The delay (in milliseconds before class is removed).
 	 * @see https://htmx.org/api/#removeClass
 	 */
 	function removeClassFromElement(node, clazz, delay) {
@@ -1309,8 +1309,7 @@ var htmx = (function () {
 	 * Adds an event listener to an element.
 	 * @param {EventTarget|string} arg1 - The element to add the listener to | the event name to add the listener for.
 	 * @param {string|EventListener} arg2 - The event name to add the listener for | the listener to add.
-	 * @param {EventListener | object | boolean} [arg3] the listener to add | options to add
-	 * @param {Object|boolean} [arg4] options to add
+	 * @param {EventListener | object | boolean} [arg3] - The listener to add | Options to add.
 	 * @returns {EventListener}
 	 * @see https://htmx.org/api/#on
 	 */
