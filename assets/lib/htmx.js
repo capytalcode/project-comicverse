@@ -1,10 +1,9 @@
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
 
 /**
  * @copyright Big Sky Software 2024
- * @copyright Big Sky Software 2024
  * @license 0BSD
- * @link https://github.com/bigskysoftware/htmx/blob/master/dist/htmx.esm.js
  * @author Big Sky Software <https://github.com/bigskysoftware>
  *
  * This source code is copied from HTMX's GitHub repository, located at
@@ -1310,6 +1309,7 @@ var htmx = (function () {
 	 * @param {EventTarget|string} arg1 - The element to add the listener to | the event name to add the listener for.
 	 * @param {string|EventListener} arg2 - The event name to add the listener for | the listener to add.
 	 * @param {EventListener | object | boolean} [arg3] - The listener to add | Options to add.
+	 * @param {object | boolean} [arg4] - Options to add.
 	 * @returns {EventListener}
 	 * @see https://htmx.org/api/#on
 	 */
@@ -1325,8 +1325,8 @@ var htmx = (function () {
 	/**
 	 * Removes an event listener from an element.
 	 * @param {EventTarget|string} arg1 - The element to remove the listener from | the event name to remove the listener from.
-	 * @param {string|EventListener} arg2 - The event name to remove the listener from | the listener to remove.
-	 * @param {EventListener} [arg3] - the listener to remove
+	 * @param {string|EventListener} arg2 - The event name to remove the listener from | The listener to remove.
+	 * @param {EventListener} [arg3] - The listener to remove.
 	 * @returns {EventListener}
 	 * @see https://htmx.org/api/#off
 	 */
@@ -3100,7 +3100,7 @@ var htmx = (function () {
 	 * Triggers a given event on an element.
 	 * @param {EventTarget|string} elt - The element to trigger the event on.
 	 * @param {string} eventName - The name of the event to trigger.
-	 * @param {any=} detail - details for the event
+	 * @param {any=} detail - Details for the event.
 	 * @returns {boolean}
 	 * @see https://htmx.org/api/#trigger
 	 */
@@ -3473,7 +3473,7 @@ var htmx = (function () {
 	/**
 	 * @param {string} name
 	 * @param {string|Array|FormDataEntryValue} value
-	  @param {FormData} formData */
+	  * @param {FormData} formData */
 	function addValueToFormData(name, value, formData) {
 		if (name != null && value != null) {
 			if (Array.isArray(value)) {
@@ -3488,7 +3488,7 @@ var htmx = (function () {
 	/**
 	 * @param {string} name
 	 * @param {string|Array} value
-	  @param {FormData} formData */
+	  * @param {FormData} formData */
 	function removeValueFromFormData(name, value, formData) {
 		if (name != null && value != null) {
 			let values = formData.getAll(name);
@@ -4049,7 +4049,7 @@ var htmx = (function () {
 	 * @param {HttpVerb} verb
 	 * @param {string} path - The URL path to make the AJAX.
 	 * @param {Element|string|HtmxAjaxHelperContext} context - The element to target (defaults to the **body**) | a selector for the target | a context object that contains any of the following.
-	 * @returns {Promise<void>} Promise that resolves immediately if no request is sent, or when the request is complete
+	 * @returns {Promise<void>} Promise that resolves immediately if no request is sent, or when the request is complete.
 	 * @see https://htmx.org/api/#ajax
 	 */
 	function ajaxHelper(verb, path, context) {

@@ -1,9 +1,9 @@
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
 
 /**
  * @copyright Big Sky Software 2024
  * @license 0BSD
- * @link https://github.com/bigskysoftware/htmx/blob/master/dist/htmx.d.ts
  * @copyright Big Sky Software 2024
  * @author Big Sky Software <https://github.com/bigskysoftware>
  *
