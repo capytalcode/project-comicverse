@@ -41,10 +41,17 @@ type Route struct {
 }
 
 func NewRouter(mux ...*http.ServeMux) Router {
+	var m *http.ServeMux
+	if len(mux) > 0 {
+		m = mux[0]
+	} else {
+		m = http.NewServeMux()
+	}
+
 	return &defaultRouter{
-		http.NewServeMux(),
+		m,
 		[]middleware.Middleware{},
-		map[string]http.Handler{},
+		map[string]Route{},
 	}
 }
 
