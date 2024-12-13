@@ -199,7 +199,7 @@ func (r *defaultRouter) parsePath(p string) (method, host, pth string) {
 
 	// If "[METHOD ][HOST]" is empty, we just have the path and can send it back
 	if ps[0] == "" {
-		return "", "", path.Join("/", ps[1])
+		return "", "", path.Join("/", strings.Join(ps[1:], "/"))
 	}
 
 	// Split string again, if method is not defined, this will end up being just []string{"[HOST]"}
@@ -209,8 +209,8 @@ func (r *defaultRouter) parsePath(p string) (method, host, pth string) {
 
 	// If slice is of length 1, this means it is []string{"[HOST]"}
 	if len(mh) == 1 {
-		return "", host, path.Join("/", ps[1])
+		return "", host, path.Join("/", strings.Join(ps[1:], "/"))
 	}
 
-	return mh[0], mh[1], path.Join("/", ps[1])
+	return mh[0], mh[1], path.Join("/", strings.Join(ps[1:], "/"))
 }
