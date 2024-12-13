@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"strings"
 
+	"forge.capytal.company/capytalcode/project-comicverse/lib/middleware"
 	"github.com/a-h/templ"
 )
 
@@ -127,17 +128,11 @@ func (h ErrorDisplayer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-type ErrorMiddleware struct {
-	page     ErrorMiddlewarePage
-	notfound ErrorMiddlewarePage
-	log      *slog.Logger
-}
-
 func NewErrorMiddleware(
 	p ErrorMiddlewarePage,
 	l *slog.Logger,
 	notfound ...ErrorMiddlewarePage,
-) *ErrorMiddleware {
+) middleware.Middleware {
 	var nf ErrorMiddlewarePage
 	if len(notfound) > 0 {
 		nf = notfound[0]
@@ -147,20 +142,18 @@ func NewErrorMiddleware(
 
 	l = l.WithGroup("error_middleware")
 
-	return &ErrorMiddleware{p, nf, l}
-}
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			r.Header.Set(ERROR_MIDDLEWARE_HEADER, "enable")
 
-func (m *ErrorMiddleware) Wrap(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		r.Header.Set(ERROR_MIDDLEWARE_HEADER, "enable")
+			if uerr := r.URL.Query().Get("error"); uerr != "" && prefersHtml(r.Header) {
+				ErrorDisplayer{l, nf}.ServeHTTP(w, r)
+				return
+			}
 
-		if uerr := r.URL.Query().Get("error"); uerr != "" && prefersHtml(r.Header) {
-			ErrorDisplayer{m.log, m.page}.ServeHTTP(w, r)
-			return
-		}
-
-		next.ServeHTTP(w, r)
-	})
+			next.ServeHTTP(w, r)
+		})
+	}
 }
 
 func prefersHtml(h http.Header) bool {

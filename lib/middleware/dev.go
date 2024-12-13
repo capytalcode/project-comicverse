@@ -13,10 +13,6 @@ func DevMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-type LoggerMiddleware struct {
-	log *slog.Logger
-}
-
 type loggerReponse struct {
 	http.ResponseWriter
 	status int
@@ -27,42 +23,40 @@ func (lr *loggerReponse) WriteHeader(s int) {
 	lr.ResponseWriter.WriteHeader(s)
 }
 
-func NewLoggerMiddleware(l *slog.Logger) *LoggerMiddleware {
+func NewLoggerMiddleware(l *slog.Logger) Middleware {
 	l = l.WithGroup("logger_middleware")
-	return &LoggerMiddleware{l}
-}
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			id := randHash(5)
 
-func (l *LoggerMiddleware) Wrap(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		id := randHash(5)
+			l.Info("NEW REQUEST",
+				slog.String("id", id),
+				slog.String("status", "xxx"),
+				slog.String("method", r.Method),
+				slog.String("path", r.URL.Path),
+			)
 
-		l.log.Info("NEW REQUEST",
-			slog.String("id", id),
-			slog.String("status", "xxx"),
-			slog.String("method", r.Method),
-			slog.String("path", r.URL.Path),
-		)
+			lw := &loggerReponse{w, http.StatusOK}
+			next.ServeHTTP(lw, r)
 
-		lw := &loggerReponse{w, http.StatusOK}
-		next.ServeHTTP(lw, r)
+			if lw.status >= 400 {
+				l.Warn("ERR REQUEST",
+					slog.String("id", id),
+					slog.Int("status", lw.status),
+					slog.String("method", r.Method),
+					slog.String("path", r.URL.Path),
+				)
+				return
+			}
 
-		if lw.status >= 400 {
-			l.log.Warn("ERR REQUEST",
+			l.Info("END REQUEST",
 				slog.String("id", id),
 				slog.Int("status", lw.status),
 				slog.String("method", r.Method),
 				slog.String("path", r.URL.Path),
 			)
-			return
-		}
-
-		l.log.Info("END REQUEST",
-			slog.String("id", id),
-			slog.Int("status", lw.status),
-			slog.String("method", r.Method),
-			slog.String("path", r.URL.Path),
-		)
-	})
+		})
+	}
 }
 
 const HASH_CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"

@@ -68,11 +68,9 @@ func (a *App) setLogger() {
 }
 
 func (a *App) setServer() {
-	mlogger := middleware.NewLoggerMiddleware(a.logger)
-
 	r := router.NewRouter()
 
-	r.Use(mlogger.Wrap)
+	r.Use(middleware.NewLoggerMiddleware(a.logger))
 
 	if configs.DEVELOPMENT {
 		a.logger.Info("RUNNING IN DEVELOPMENT MODE")

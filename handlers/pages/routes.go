@@ -11,8 +11,7 @@ import (
 func Routes(logger *slog.Logger) router.Router {
 	r := router.NewRouter()
 
-	mErrors := rerrors.NewErrorMiddleware(ErrorPage{}.Component, logger)
-	r.Use(mErrors.Wrap)
+	r.Use(rerrors.NewErrorMiddleware(ErrorPage{}.Component, logger))
 
 	r.Handle("/dashboard", &Dashboard{})
 
