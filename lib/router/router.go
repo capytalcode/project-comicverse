@@ -197,9 +197,24 @@ func (r *defaultRouter) parsePath(p string) (method, host, pth string) {
 	// first split it between "[METHOD ][HOST]" and "[PATH]"
 	ps := strings.Split(p, "/")
 
+	pth = path.Join("/", strings.Join(ps[1:], "/"))
+
+	// path.Join adds a trailing slash, if the original path doesn't has one, the parsed
+	// path shouldn't also
+	if !strings.HasSuffix(p, "/") {
+		pth = strings.TrimSuffix(pth, "/")
+	}
+
+	// Since path.Join adds a trailing slash, it can break the {pattern...} syntax.
+	// So we check if it has the suffix "...}/" to see if it ends in "/{pattern...}/"
+	if strings.HasSuffix(pth, "...}/") {
+		// If it does, we remove the any possible trailing slash
+		pth = strings.TrimSuffix(pth, "/")
+	}
+
 	// If "[METHOD ][HOST]" is empty, we just have the path and can send it back
 	if ps[0] == "" {
-		return "", "", path.Join("/", strings.Join(ps[1:], "/"))
+		return "", "", pth
 	}
 
 	// Split string again, if method is not defined, this will end up being just []string{"[HOST]"}
@@ -209,8 +224,8 @@ func (r *defaultRouter) parsePath(p string) (method, host, pth string) {
 
 	// If slice is of length 1, this means it is []string{"[HOST]"}
 	if len(mh) == 1 {
-		return "", host, path.Join("/", strings.Join(ps[1:], "/"))
+		return "", host, pth
 	}
 
-	return mh[0], mh[1], path.Join("/", strings.Join(ps[1:], "/"))
+	return mh[0], mh[1], pth
 }
