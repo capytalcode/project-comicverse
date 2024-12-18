@@ -61,16 +61,16 @@ type defaultRouter struct {
 	routes      map[string]Route
 }
 
-func (r *defaultRouter) Handle(p string, h http.Handler) {
+func (r *defaultRouter) Handle(pattern string, h http.Handler) {
 	if sr, ok := h.(Router); ok {
-		r.handleRouter(p, sr)
+		r.handleRouter(pattern, sr)
 	} else {
-		r.handle(p, h)
+		r.handle(pattern, h)
 	}
 }
 
-func (r *defaultRouter) HandleFunc(p string, hf http.HandlerFunc) {
-	r.handle(p, hf)
+func (r *defaultRouter) HandleFunc(pattern string, hf http.HandlerFunc) {
+	r.handle(pattern, hf)
 }
 
 func (r *defaultRouter) Use(m middleware.Middleware) {
@@ -103,8 +103,8 @@ func (r *defaultRouter) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	r.mux.ServeHTTP(w, req)
 }
 
-func (r defaultRouter) handle(p string, hf http.Handler) {
-	m, h, p := r.parsePath(p)
+func (r defaultRouter) handle(pattern string, hf http.Handler) {
+	m, h, p := r.parsePattern(pattern)
 	rt := Route{
 		Method:  m,
 		Host:    h,
@@ -114,8 +114,8 @@ func (r defaultRouter) handle(p string, hf http.Handler) {
 	r.handleRoute(rt)
 }
 
-func (r defaultRouter) handleRouter(p string, rr Router) {
-	m, h, p := r.parsePath(p)
+func (r defaultRouter) handleRouter(pattern string, rr Router) {
+	m, h, p := r.parsePattern(pattern)
 
 	rs, ok := rr.(RouterWithRoutes)
 	if !ok {
@@ -190,31 +190,31 @@ func (r defaultRouter) handleRoute(rt Route) {
 	r.mux.Handle(p, rt.Handler)
 }
 
-func (r *defaultRouter) parsePath(p string) (method, host, pth string) {
-	p = strings.TrimSpace(p)
+func (r *defaultRouter) parsePattern(pattern string) (method, host, p string) {
+	pattern = strings.TrimSpace(pattern)
 
 	// ServerMux patterns are "[METHOD ][HOST]/[PATH]", so to parsing it, we must
 	// first split it between "[METHOD ][HOST]" and "[PATH]"
-	ps := strings.Split(p, "/")
+	ps := strings.Split(pattern, "/")
 
-	pth = path.Join("/", strings.Join(ps[1:], "/"))
+	p = path.Join("/", strings.Join(ps[1:], "/"))
 
-	// path.Join adds a trailing slash, if the original path doesn't has one, the parsed
+	// path.Join adds a trailing slash, if the original pattern doesn't has one, the parsed
 	// path shouldn't also
-	if !strings.HasSuffix(p, "/") {
-		pth = strings.TrimSuffix(pth, "/")
+	if !strings.HasSuffix(pattern, "/") {
+		p = strings.TrimSuffix(p, "/")
 	}
 
 	// Since path.Join adds a trailing slash, it can break the {pattern...} syntax.
 	// So we check if it has the suffix "...}/" to see if it ends in "/{pattern...}/"
-	if strings.HasSuffix(pth, "...}/") {
+	if strings.HasSuffix(p, "...}/") {
 		// If it does, we remove the any possible trailing slash
-		pth = strings.TrimSuffix(pth, "/")
+		p = strings.TrimSuffix(p, "/")
 	}
 
 	// If "[METHOD ][HOST]" is empty, we just have the path and can send it back
 	if ps[0] == "" {
-		return "", "", pth
+		return "", "", p
 	}
 
 	// Split string again, if method is not defined, this will end up being just []string{"[HOST]"}
@@ -224,8 +224,8 @@ func (r *defaultRouter) parsePath(p string) (method, host, pth string) {
 
 	// If slice is of length 1, this means it is []string{"[HOST]"}
 	if len(mh) == 1 {
-		return "", host, pth
+		return "", host, p
 	}
 
-	return mh[0], mh[1], pth
+	return mh[0], mh[1], p
 }
