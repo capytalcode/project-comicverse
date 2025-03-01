@@ -2,13 +2,8 @@
   description = "My development environment";
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-    templ.url = "github:a-h/templ?ref=v0.2.778";
   };
-  outputs = {
-    self,
-    nixpkgs,
-    ...
-  } @ inputs: let
+  outputs = {nixpkgs, ...}: let
     systems = [
       "x86_64-linux"
       "aarch64-linux"
@@ -20,7 +15,6 @@
         pkgs = import nixpkgs {inherit system;};
       in
         f system pkgs);
-    templ = system: inputs.templ.packages.${system}.templ;
   in {
     devShells = forAllSystems (system: pkgs: {
       default = pkgs.mkShell {
@@ -28,19 +22,12 @@
         hardeningDisable = ["all"];
 
         buildInputs = with pkgs; [
-          # Javascript tools
-          eslint_d
-          nodejs_22
-          nodePackages_latest.eslint
-
           # Go tools
           go
-          gofumpt
           golangci-lint
-          golines
+          gofumpt
           gotools
           delve
-          (templ system)
 
           # Sqlite tools
           sqlite

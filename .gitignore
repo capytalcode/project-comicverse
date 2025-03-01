@@ -1,8 +1,0 @@
-*.env
-*_templ.go
-*_templ.txt
-node_modules/
-bin/
-tmp/
-.dist/
-assets/css/uno.css
