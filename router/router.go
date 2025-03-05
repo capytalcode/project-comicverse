@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"net/http"
 
+	"forge.capytal.company/capytalcode/project-comicverse/templates"
 	"forge.capytal.company/loreddev/x/smalltrip"
 	"forge.capytal.company/loreddev/x/smalltrip/exceptions"
 	"forge.capytal.company/loreddev/x/smalltrip/middleware"
@@ -24,9 +25,12 @@ func New(assertions tinyssert.Assertions, log *slog.Logger, dev bool) http.Handl
 	r.Use(exceptions.PanicMiddleware())
 	r.Use(exceptions.Middleware())
 
-	r.HandleFunc("/", func(w http.ResponseWriter, _ *http.Request) {
+	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte("Hello world"))
+		err := templates.Templates().ExecuteTemplate(w, "test.html", nil)
+		if err != nil {
+			exceptions.InternalServerError(err).ServeHTTP(w, r)
+		}
 	})
 	r.HandleFunc("/test", func(w http.ResponseWriter, r *http.Request) {
 		exceptions.InternalServerError(errors.New("TEST ERROR"),
@@ -38,4 +42,7 @@ func New(assertions tinyssert.Assertions, log *slog.Logger, dev bool) http.Handl
 	})
 
 	return r
+}
+
+func dashboard(w http.ResponseWriter, r *http.Request) {
 }
