@@ -21,6 +21,7 @@ func New(assertions tinyssert.Assertions, log *slog.Logger, dev bool) http.Handl
 	} else {
 		r.Use(middleware.PersistentCache())
 	}
+	r.Use(exceptions.PanicMiddleware())
 	r.Use(exceptions.Middleware())
 
 	r.HandleFunc("/", func(w http.ResponseWriter, _ *http.Request) {
@@ -31,6 +32,9 @@ func New(assertions tinyssert.Assertions, log *slog.Logger, dev bool) http.Handl
 		exceptions.InternalServerError(errors.New("TEST ERROR"),
 			exceptions.WithData("test-data", "test-value"),
 		).ServeHTTP(w, r)
+	})
+	r.HandleFunc("/panic", func(w http.ResponseWriter, r *http.Request) {
+		panic("TEST PANIC")
 	})
 
 	return r
