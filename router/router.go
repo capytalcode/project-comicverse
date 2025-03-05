@@ -7,7 +7,7 @@ import (
 
 	"forge.capytal.company/capytalcode/project-comicverse/templates"
 	"forge.capytal.company/loreddev/x/smalltrip"
-	"forge.capytal.company/loreddev/x/smalltrip/exceptions"
+	"forge.capytal.company/loreddev/x/smalltrip/exception"
 	"forge.capytal.company/loreddev/x/smalltrip/middleware"
 	"forge.capytal.company/loreddev/x/tinyssert"
 )
@@ -22,19 +22,19 @@ func New(assertions tinyssert.Assertions, log *slog.Logger, dev bool) http.Handl
 	} else {
 		r.Use(middleware.PersistentCache())
 	}
-	r.Use(exceptions.PanicMiddleware())
-	r.Use(exceptions.Middleware())
+	r.Use(exception.PanicMiddleware())
+	r.Use(exception.Middleware())
 
 	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		err := templates.Templates().ExecuteTemplate(w, "test.html", nil)
 		if err != nil {
-			exceptions.InternalServerError(err).ServeHTTP(w, r)
+			exception.InternalServerError(err).ServeHTTP(w, r)
 		}
 	})
 	r.HandleFunc("/test", func(w http.ResponseWriter, r *http.Request) {
-		exceptions.InternalServerError(errors.New("TEST ERROR"),
-			exceptions.WithData("test-data", "test-value"),
+		exception.InternalServerError(errors.New("TEST ERROR"),
+			exception.WithData("test-data", "test-value"),
 		).ServeHTTP(w, r)
 	})
 	r.HandleFunc("/panic", func(w http.ResponseWriter, r *http.Request) {
