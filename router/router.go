@@ -35,9 +35,6 @@ func New(assertions tinyssert.Assertions, log *slog.Logger, dev bool) http.Handl
 		}
 	})
 	r.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))))
-	r.HandleFunc("/panic", func(w http.ResponseWriter, r *http.Request) {
-		panic("TEST PANIC")
-	})
 
 	return r
 }
