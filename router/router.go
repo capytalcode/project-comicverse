@@ -13,7 +13,10 @@ import (
 )
 
 func New(assertions tinyssert.Assertions, log *slog.Logger, dev bool) http.Handler {
-	r := smalltrip.NewRouter(smalltrip.WithAssertions(assertions), smalltrip.WithLogger(log.WithGroup("smalltrip")))
+	r := smalltrip.NewRouter(
+		smalltrip.WithAssertions(assertions),
+		smalltrip.WithLogger(log.WithGroup("smalltrip")),
+	)
 
 	r.Use(middleware.Logger(log.WithGroup("requests")))
 	if dev {
