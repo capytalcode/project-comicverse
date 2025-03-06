@@ -27,9 +27,9 @@ func New(assertions tinyssert.Assertions, log *slog.Logger, dev bool) http.Handl
 	r.Use(exception.PanicMiddleware())
 	r.Use(exception.Middleware())
 
-	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	r.HandleFunc("/dashboard", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		err := templates.Templates().ExecuteTemplate(w, "index.html", nil)
+		err := templates.Templates().ExecuteTemplate(w, "dashboard", nil)
 		if err != nil {
 			exception.InternalServerError(err).ServeHTTP(w, r)
 		}
