@@ -30,11 +30,12 @@ func New(assertions tinyssert.Assertions, log *slog.Logger, dev bool) http.Handl
 
 	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		err := templates.Templates().ExecuteTemplate(w, "test.html", nil)
+		err := templates.Templates().ExecuteTemplate(w, "index.html", nil)
 		if err != nil {
 			exception.InternalServerError(err).ServeHTTP(w, r)
 		}
 	})
+	r.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))))
 	r.HandleFunc("/test", func(w http.ResponseWriter, r *http.Request) {
 		exception.InternalServerError(errors.New("TEST ERROR"),
 			exception.WithData("test-data", "test-value"),

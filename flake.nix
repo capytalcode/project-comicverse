@@ -29,6 +29,9 @@
           gotools
           delve
 
+          # TailwindCSS
+          tailwindcss
+
           # Sqlite tools
           sqlite
           lazysql

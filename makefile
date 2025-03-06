@@ -7,7 +7,7 @@ fmt:
 	go fmt .
 	golangci-lint run --fix .
 
-dev:
+dev/server:
 	go run github.com/joho/godotenv/cmd/godotenv@v1.5.1 \
 		go run github.com/air-verse/air@v1.52.2 \
 			--build.cmd "go build -o .tmp/bin/main ." \
@@ -21,8 +21,15 @@ dev:
 			--misc.clean_on_exit true \
 			-- -dev -port $$(($(PORT) + 1))
 
+dev/assets:
+	tailwindcss -o ./static/css/wind.css -w
+
+dev:
+	$(MAKE) -j2 dev/server dev/assets
+
 
 build:
+	go generate
 	go build -o ./.dist/app .
 
 run: build
