@@ -1,7 +1,6 @@
 package router
 
 import (
-	"errors"
 	"log/slog"
 	"net/http"
 
@@ -36,11 +35,6 @@ func New(assertions tinyssert.Assertions, log *slog.Logger, dev bool) http.Handl
 		}
 	})
 	r.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))))
-	r.HandleFunc("/test", func(w http.ResponseWriter, r *http.Request) {
-		exception.InternalServerError(errors.New("TEST ERROR"),
-			exception.WithData("test-data", "test-value"),
-		).ServeHTTP(w, r)
-	})
 	r.HandleFunc("/panic", func(w http.ResponseWriter, r *http.Request) {
 		panic("TEST PANIC")
 	})
