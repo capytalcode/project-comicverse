@@ -1,0 +1,15 @@
+{{define "dashboard"}}
+{{template "layout-page-start" (args "Title" "Dashboard")}}
+<main class="justify-center align-middle w-full h-full">
+	{{if .Projects}}
+	<h2>Projects</h2>
+	{{else}}
+	<div class="w-full h-screen flex justify-center items-center fixed top">
+		<button class="bg-slate-700 text-slate-100 p-2 px-5 rounded-full">
+			New project
+		</button>
+	</div>
+	{{end}}
+</main>
+{{template "layout-page-end"}}
+{{end}}
