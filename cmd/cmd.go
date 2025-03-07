@@ -61,7 +61,8 @@ func Execute() {
 			slog.Bool("development", *dev))
 
 		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			log.Error("Failed to start application", slog.String("error", err.Error()))
+			log.Error("Failed to start application server", slog.String("error", err.Error()))
+			os.Exit(1)
 		}
 	}()
 
@@ -69,7 +70,8 @@ func Execute() {
 
 	log.Info("Stopping application gracefully")
 	if err := srv.Shutdown(ctx); err != nil {
-		log.Error("Failed to stop application gracefully", slog.String("error", err.Error()))
+		log.Error("Failed to stop application server gracefully", slog.String("error", err.Error()))
+		os.Exit(1)
 	}
 
 	log.Info("FINAL")
