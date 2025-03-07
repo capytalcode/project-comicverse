@@ -11,7 +11,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"forge.capytal.company/capytalcode/project-comicverse/router"
+	comicverse "forge.capytal.company/capytalcode/project-comicverse"
 	"forge.capytal.company/loreddev/x/tinyssert"
 )
 
@@ -44,6 +44,22 @@ func main() {
 	log := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: level}))
 
 	app := router.New(assertions, log, *dev)
+	opts := []comicverse.Option{
+		comicverse.WithContext(ctx),
+		comicverse.WithAssertions(assertions),
+		comicverse.WithLogger(log),
+	}
+
+	if *dev {
+		opts = append(opts, comicverse.WithDevelopmentMode())
+	}
+
+	app, err := comicverse.New(comicverse.Config{
+	}, opts...)
+	if err != nil {
+		log.Error("Failed to initiate comicverse app", slog.String("error", err.Error()))
+		os.Exit(1)
+	}
 
 	srv := &http.Server{
 		Addr:    fmt.Sprintf("%s:%d", *hostname, *port),
