@@ -10,8 +10,8 @@ fmt:
 dev/server:
 	go run github.com/joho/godotenv/cmd/godotenv@v1.5.1 \
 		go run github.com/air-verse/air@v1.52.2 \
-			--build.cmd "go build -o .tmp/bin/main ." \
-			--build.bin ".tmp/bin/main" \
+			--build.cmd "go build -o tmp/bin/main ./cmd" \
+			--build.bin "tmp/bin/main" \
 			--build.exclude_dir "node_modules" \
 			--build.include_ext "go,html" \
 			--build.stop_on_error "false" \
