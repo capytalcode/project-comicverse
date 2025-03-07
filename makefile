@@ -15,9 +15,6 @@ dev/server:
 			--build.exclude_dir "node_modules" \
 			--build.include_ext "go,html" \
 			--build.stop_on_error "false" \
-			--proxy.enabled true \
-			--proxy.proxy_port $(PORT) \
-			--proxy.app_port $$(($(PORT) + 1)) \
 			--misc.clean_on_exit true \
 			-- -dev -port $$(($(PORT) + 1))
 
