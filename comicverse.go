@@ -9,6 +9,7 @@ import (
 	"log/slog"
 	"net/http"
 
+	"forge.capytal.company/capytalcode/project-comicverse/router"
 	"forge.capytal.company/loreddev/x/tinyssert"
 )
 
@@ -66,6 +67,8 @@ func WithDevelopmentMode() Option {
 }
 
 type app struct {
+	handler http.Handler
+
 	developmentMode bool
 	context         context.Context
 
@@ -78,7 +81,19 @@ func (app *app) setup() error {
 	app.assert.NotNil(app.logger)
 
 	var err error
+
+	app.handler, err = router.New(router.Config{
+		DisableCache: app.developmentMode,
+		Assertions: app.assert,
+		Logger:     app.logger,
+	})
+	if err != nil {
+		return errors.Join(errors.New("unable to initiate router"), err)
+	}
+
 	return err
 }
 func (app *app) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	app.assert.NotNil(app.handler)
+	app.handler.ServeHTTP(w, r)
 }
