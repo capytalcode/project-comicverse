@@ -22,7 +22,7 @@ dev/assets:
 	tailwindcss -o ./static/css/wind.css -w
 
 dev:
-	$(MAKE) -j2 dev/server dev/assets
+	$(MAKE) -j2 dev/assets dev/server
 
 
 build:
