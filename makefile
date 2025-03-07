@@ -16,7 +16,7 @@ dev/server:
 			--build.include_ext "go,html" \
 			--build.stop_on_error "false" \
 			--misc.clean_on_exit true \
-			-- -dev -port $$(($(PORT) + 1))
+			-- -dev -port $(PORT) -hostname 0.0.0.0
 
 dev/assets:
 	tailwindcss -o ./static/css/wind.css -w

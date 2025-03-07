@@ -16,7 +16,7 @@ import (
 )
 
 var (
-	host         = flag.String("host", "localhost", "Host to listen to")
+	hostname     = flag.String("hostname", "localhost", "Host to listen to")
 	port         = flag.Uint("port", 8080, "Port to be used for the server.")
 	templatesDir = flag.String("templates", "", "Templates directory to be used instead of built-in ones.")
 	verbose      = flag.Bool("verbose", false, "Print debug information on logs")
@@ -46,7 +46,7 @@ func Execute() {
 	app := router.New(assertions, log, *dev)
 
 	srv := &http.Server{
-		Addr:    fmt.Sprintf("%s:%d", *host, *port),
+		Addr:    fmt.Sprintf("%s:%d", *hostname, *port),
 		Handler: app,
 	}
 
@@ -55,7 +55,7 @@ func Execute() {
 
 	go func() {
 		log.Info("Starting application",
-			slog.String("host", *host),
+			slog.String("host", *hostname),
 			slog.Uint64("port", uint64(*port)),
 			slog.Bool("verbose", *verbose),
 			slog.Bool("development", *dev))
