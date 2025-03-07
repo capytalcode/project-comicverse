@@ -91,6 +91,7 @@ func (app *app) setup() error {
 	var err error
 
 	app.handler, err = router.New(router.Config{
+		Templates:    templates.Templates(),
 		DisableCache: app.developmentMode,
 		StaticFiles:  app.staticFiles,
 

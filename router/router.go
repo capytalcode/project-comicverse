@@ -2,6 +2,7 @@ package router
 
 import (
 	"errors"
+	"html/template"
 	"io/fs"
 	"log/slog"
 	"net/http"
@@ -13,6 +14,7 @@ import (
 )
 
 type router struct {
+	templates   *template.Template
 	staticFiles fs.FS
 	cache       bool
 
@@ -21,6 +23,9 @@ type router struct {
 }
 
 func New(cfg Config) (http.Handler, error) {
+	if cfg.Templates == nil {
+		return nil, errors.New("templates are nil")
+	}
 	if cfg.StaticFiles == nil {
 		return nil, errors.New("static files handler is nil")
 	}
@@ -32,6 +37,7 @@ func New(cfg Config) (http.Handler, error) {
 	}
 
 	r := &router{
+		templates:   cfg.Templates,
 		staticFiles: cfg.StaticFiles,
 
 		cache:  !cfg.DisableCache,
@@ -43,6 +49,7 @@ func New(cfg Config) (http.Handler, error) {
 }
 
 type Config struct {
+	Templates    *template.Template
 	StaticFiles  fs.FS
 	DisableCache bool
 
@@ -84,4 +91,8 @@ func (router *router) dashboard(w http.ResponseWriter, r *http.Request) {
 	router.assert.NotNil(r)
 
 	w.WriteHeader(http.StatusOK)
+	err := router.templates.ExecuteTemplate(w, "dashboard", nil)
+	if err != nil {
+		exception.InternalServerError(err).ServeHTTP(w, r)
+	}
 }
