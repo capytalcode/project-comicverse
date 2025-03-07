@@ -27,7 +27,7 @@ func init() {
 	flag.Parse()
 }
 
-func Execute() {
+func main() {
 	ctx := context.Background()
 
 	assertions := tinyssert.NewDisabledAssertions()
