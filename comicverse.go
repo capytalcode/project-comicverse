@@ -11,6 +11,7 @@ import (
 
 	"forge.capytal.company/capytalcode/project-comicverse/router"
 	"forge.capytal.company/capytalcode/project-comicverse/static"
+	"forge.capytal.company/capytalcode/project-comicverse/templates"
 	"forge.capytal.company/loreddev/x/tinyssert"
 )
 
