@@ -10,11 +10,13 @@ import (
 	"net/http"
 
 	"forge.capytal.company/capytalcode/project-comicverse/router"
+	"forge.capytal.company/capytalcode/project-comicverse/static"
 	"forge.capytal.company/loreddev/x/tinyssert"
 )
 
 func New(cfg Config, opts ...Option) (http.Handler, error) {
 	app := &app{
+		staticFiles:     static.Files(),
 		developmentMode: false,
 		context:         context.Background(),
 
@@ -24,6 +26,10 @@ func New(cfg Config, opts ...Option) (http.Handler, error) {
 
 	for _, opt := range opts {
 		opt(app)
+	}
+
+	if app.staticFiles == nil {
+		return nil, errors.New("static files must not be a nil interface")
 	}
 
 	if app.context == nil {
@@ -69,6 +75,7 @@ func WithDevelopmentMode() Option {
 type app struct {
 	handler http.Handler
 
+	staticFiles     fs.FS
 	developmentMode bool
 	context         context.Context
 
@@ -77,6 +84,7 @@ type app struct {
 }
 
 func (app *app) setup() error {
+	app.assert.NotNil(app.staticFiles)
 	app.assert.NotNil(app.context)
 	app.assert.NotNil(app.logger)
 
@@ -84,6 +92,8 @@ func (app *app) setup() error {
 
 	app.handler, err = router.New(router.Config{
 		DisableCache: app.developmentMode,
+		StaticFiles:  app.staticFiles,
+
 		Assertions: app.assert,
 		Logger:     app.logger,
 	})
@@ -93,6 +103,7 @@ func (app *app) setup() error {
 
 	return err
 }
+
 func (app *app) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	app.assert.NotNil(app.handler)
 	app.handler.ServeHTTP(w, r)

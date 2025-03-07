@@ -1,10 +1,11 @@
 package router
 
 import (
+	"errors"
+	"io/fs"
 	"log/slog"
 	"net/http"
 
-	"forge.capytal.company/capytalcode/project-comicverse/templates"
 	"forge.capytal.company/loreddev/x/smalltrip"
 	"forge.capytal.company/loreddev/x/smalltrip/exception"
 	"forge.capytal.company/loreddev/x/smalltrip/middleware"
@@ -12,6 +13,7 @@ import (
 )
 
 type router struct {
+	staticFiles fs.FS
 	cache       bool
 
 	assert tinyssert.Assertions
@@ -19,6 +21,9 @@ type router struct {
 }
 
 func New(cfg Config) (http.Handler, error) {
+	if cfg.StaticFiles == nil {
+		return nil, errors.New("static files handler is nil")
+	}
 	if cfg.Assertions == nil {
 		return nil, errors.New("assertions is nil")
 	}
@@ -27,6 +32,8 @@ func New(cfg Config) (http.Handler, error) {
 	}
 
 	r := &router{
+		staticFiles: cfg.StaticFiles,
+
 		cache:  !cfg.DisableCache,
 		assert: cfg.Assertions,
 		log:    cfg.Logger,
@@ -36,6 +43,7 @@ func New(cfg Config) (http.Handler, error) {
 }
 
 type Config struct {
+	StaticFiles  fs.FS
 	DisableCache bool
 
 	Assertions tinyssert.Assertions
@@ -44,6 +52,7 @@ type Config struct {
 
 func (router *router) setup() http.Handler {
 	router.assert.NotNil(router.log)
+	router.assert.NotNil(router.staticFiles)
 
 	log := router.log
 
@@ -64,6 +73,7 @@ func (router *router) setup() http.Handler {
 	r.Use(exception.PanicMiddleware())
 	r.Use(exception.Middleware())
 
+	r.Handle("/static", http.StripPrefix("/static/", http.FileServerFS(router.staticFiles)))
 	r.HandleFunc("/dashboard", router.dashboard)
 
 	return r

@@ -51,6 +51,9 @@ func main() {
 	}
 
 	if *dev {
+		d := os.DirFS("./static")
+		opts = append(opts, comicverse.WithStaticFiles(d))
+
 		opts = append(opts, comicverse.WithDevelopmentMode())
 	}
 
