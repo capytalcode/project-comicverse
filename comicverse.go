@@ -14,11 +14,14 @@ import (
 	"forge.capytal.company/capytalcode/project-comicverse/static"
 	"forge.capytal.company/capytalcode/project-comicverse/templates"
 	"forge.capytal.company/loreddev/x/tinyssert"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 )
 
 func New(cfg Config, opts ...Option) (http.Handler, error) {
 	app := &app{
 		db: cfg.DB,
+		s3: cfg.S3,
+
 		staticFiles:     static.Files(),
 		developmentMode: false,
 		context:         context.Background(),
@@ -34,6 +37,10 @@ func New(cfg Config, opts ...Option) (http.Handler, error) {
 	if app.db == nil {
 		return nil, errors.New("database interface must not be nil")
 	}
+	if app.s3 == nil {
+		return nil, errors.New("s3 client must not be nil")
+	}
+
 	if app.staticFiles == nil {
 		return nil, errors.New("static files must not be a nil interface")
 	}
@@ -55,6 +62,7 @@ func New(cfg Config, opts ...Option) (http.Handler, error) {
 
 type Config struct {
 	DB *sql.DB
+	S3 *s3.Client
 }
 
 type Option func(*app)
@@ -81,6 +89,8 @@ func WithDevelopmentMode() Option {
 
 type app struct {
 	db *sql.DB
+	s3 *s3.Client
+
 	handler http.Handler
 
 	staticFiles     fs.FS
@@ -93,6 +103,7 @@ type app struct {
 
 func (app *app) setup() error {
 	app.assert.NotNil(app.db)
+	app.assert.NotNil(app.s3)
 	app.assert.NotNil(app.staticFiles)
 	app.assert.NotNil(app.context)
 	app.assert.NotNil(app.logger)

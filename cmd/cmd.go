@@ -15,6 +15,9 @@ import (
 
 	comicverse "forge.capytal.company/capytalcode/project-comicverse"
 	"forge.capytal.company/loreddev/x/tinyssert"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	_ "github.com/tursodatabase/go-libsql"
 )
 
@@ -28,6 +31,11 @@ var (
 
 var (
 	databaseURL = getEnv("DATABASE_URL", "file://./libsql.db")
+
+	awsAccessKeyID     = os.Getenv("AWS_ACCESS_KEY_ID")
+	awsSecretAccessKey = os.Getenv("AWS_SECRET_ACCESS_KEY")
+	awsDefaultRegion   = os.Getenv("AWS_DEFAULT_REGION")
+	awsEndpointURL     = os.Getenv("AWS_ENDPOINT_URL")
 )
 
 func getEnv(key string, d string) string {
@@ -44,6 +52,12 @@ func init() {
 	switch {
 	case databaseURL == "":
 		log.Fatal("DATABASE_URL should not be a empty value")
+	case awsAccessKeyID == "":
+		log.Fatal("AWS_ACCESS_KEY_ID should not be a empty value")
+	case awsDefaultRegion == "":
+		log.Fatal("AWS_DEFAULT_REGION should not be a empty value")
+	case awsEndpointURL == "":
+		log.Fatal("AWS_ENDPOINT_URL should not be a empty value")
 	}
 }
 
@@ -68,6 +82,20 @@ func main() {
 		log.Error("Failed open connection to database", slog.String("error", err.Error()))
 		os.Exit(1)
 	}
+
+	credentials := aws.CredentialsProviderFunc(func(ctx context.Context) (aws.Credentials, error) {
+		return aws.Credentials{
+			AccessKeyID:     awsAccessKeyID,
+			SecretAccessKey: awsSecretAccessKey,
+			CanExpire:       false,
+		}, nil
+	})
+	storage := s3.New(s3.Options{
+		AppID:        "comicverse-pre-alpha",
+		BaseEndpoint: &awsEndpointURL,
+		Region:       awsDefaultRegion,
+		Credentials:  &credentials,
+	})
 
 	opts := []comicverse.Option{
 		comicverse.WithContext(ctx),

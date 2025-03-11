@@ -6,10 +6,13 @@ import (
 	"log/slog"
 
 	"forge.capytal.company/loreddev/x/tinyssert"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 )
 
 type service struct {
 	db *sql.DB
+	s3 *s3.Client
+
 	assert tinyssert.Assertions
 	log    *slog.Logger
 }
@@ -37,6 +40,7 @@ func New(cfg Config) (Service, error) {
 
 type Config struct {
 	DB *sql.DB
+	S3 *s3.Client
 
 	Assertions tinyssert.Assertions
 	Logger     *slog.Logger
