@@ -24,7 +24,7 @@ func New(cfg Config, opts ...Option) (http.Handler, error) {
 
 		staticFiles:     static.Files(),
 		developmentMode: false,
-		context:         context.Background(),
+		ctx:             context.Background(),
 
 		assert: tinyssert.NewAssertions(),
 		logger: slog.New(slog.NewTextHandler(io.Discard, &slog.HandlerOptions{Level: slog.LevelError})),
@@ -45,7 +45,7 @@ func New(cfg Config, opts ...Option) (http.Handler, error) {
 		return nil, errors.New("static files must not be a nil interface")
 	}
 
-	if app.context == nil {
+	if app.ctx == nil {
 		return nil, errors.New("context must not be a nil interface")
 	}
 
@@ -68,7 +68,7 @@ type Config struct {
 type Option func(*app)
 
 func WithContext(ctx context.Context) Option {
-	return func(app *app) { app.context = ctx }
+	return func(app *app) { app.ctx = ctx }
 }
 
 func WithStaticFiles(f fs.FS) Option {
@@ -91,11 +91,12 @@ type app struct {
 	db *sql.DB
 	s3 *s3.Client
 
-	handler http.Handler
+	ctx context.Context
 
 	staticFiles     fs.FS
 	developmentMode bool
-	context         context.Context
+
+	handler http.Handler
 
 	assert tinyssert.Assertions
 	logger *slog.Logger
@@ -104,8 +105,8 @@ type app struct {
 func (app *app) setup() error {
 	app.assert.NotNil(app.db)
 	app.assert.NotNil(app.s3)
+	app.assert.NotNil(app.ctx)
 	app.assert.NotNil(app.staticFiles)
-	app.assert.NotNil(app.context)
 	app.assert.NotNil(app.logger)
 
 	var err error
