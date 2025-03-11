@@ -9,6 +9,7 @@ import (
 	"log/slog"
 	"net/http"
 
+	"forge.capytal.company/capytalcode/project-comicverse/database"
 	"forge.capytal.company/capytalcode/project-comicverse/router"
 	"forge.capytal.company/capytalcode/project-comicverse/service"
 	"forge.capytal.company/capytalcode/project-comicverse/static"
@@ -111,9 +112,19 @@ func (app *app) setup() error {
 
 	var err error
 
+	database, err := database.New(database.Config{
+		SQL:        app.db,
+		Context:    app.ctx,
+		Assertions: app.assert,
+		Logger:     app.logger,
+	})
+	if err != nil {
+		return errors.Join(errors.New("unable to create database struct"), err)
+	}
+
 	service, err := service.New(service.Config{
-		DB: app.db,
 		S3: app.s3,
+		DB:     database,
 
 		Context: app.ctx,
 

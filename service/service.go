@@ -2,17 +2,17 @@ package service
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"log/slog"
 
+	"forge.capytal.company/capytalcode/project-comicverse/database"
 	"forge.capytal.company/loreddev/x/tinyssert"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 )
 
 type service struct {
-	db *sql.DB
 	s3 *s3.Client
+	db     *database.Database
 
 	ctx context.Context
 
@@ -22,7 +22,7 @@ type service struct {
 
 func New(cfg Config) (Service, error) {
 	if cfg.DB == nil {
-		return nil, errors.New("database should not be a nil interface")
+		return nil, errors.New("database should not be a nil pointer")
 	}
 	if cfg.S3 == nil {
 		return nil, errors.New("s3 client should not be a nil pointer")
@@ -47,8 +47,8 @@ func New(cfg Config) (Service, error) {
 }
 
 type Config struct {
-	DB *sql.DB
 	S3 *s3.Client
+	DB     *database.Database
 
 	Context context.Context
 
