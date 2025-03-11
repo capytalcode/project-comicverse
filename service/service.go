@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"log/slog"
@@ -13,6 +14,8 @@ type service struct {
 	db *sql.DB
 	s3 *s3.Client
 
+	ctx context.Context
+
 	assert tinyssert.Assertions
 	log    *slog.Logger
 }
@@ -22,7 +25,10 @@ func New(cfg Config) (Service, error) {
 		return nil, errors.New("database should not be a nil interface")
 	}
 	if cfg.S3 == nil {
-		return nil, errors.New("s3 client should not be a nil interface")
+		return nil, errors.New("s3 client should not be a nil pointer")
+	}
+	if cfg.Context == nil {
+		return nil, errors.New("context should not be a nil interface")
 	}
 	if cfg.Assertions == nil {
 		return nil, errors.New("assertions should not be a nil interface")
@@ -33,6 +39,8 @@ func New(cfg Config) (Service, error) {
 	return &service{
 		db: cfg.DB,
 
+		ctx: cfg.Context,
+
 		assert: cfg.Assertions,
 		log:    cfg.Logger,
 	}, nil
@@ -41,6 +49,8 @@ func New(cfg Config) (Service, error) {
 type Config struct {
 	DB *sql.DB
 	S3 *s3.Client
+
+	Context context.Context
 
 	Assertions tinyssert.Assertions
 	Logger     *slog.Logger

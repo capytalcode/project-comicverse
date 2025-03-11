@@ -115,6 +115,8 @@ func (app *app) setup() error {
 		DB: app.db,
 		S3: app.s3,
 
+		Context: app.ctx,
+
 		Assertions: app.assert,
 		Logger:     app.logger,
 	})
