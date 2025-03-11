@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"net/http"
 
+	"forge.capytal.company/capytalcode/project-comicverse/service"
 	"forge.capytal.company/loreddev/x/smalltrip"
 	"forge.capytal.company/loreddev/x/smalltrip/exception"
 	"forge.capytal.company/loreddev/x/smalltrip/middleware"
@@ -14,6 +15,8 @@ import (
 )
 
 type router struct {
+	service service.Service
+
 	templates   *template.Template
 	staticFiles fs.FS
 	cache       bool
@@ -23,11 +26,14 @@ type router struct {
 }
 
 func New(cfg Config) (http.Handler, error) {
+	if cfg.Service == nil {
+		return nil, errors.New("service is nil")
+	}
 	if cfg.Templates == nil {
-		return nil, errors.New("templates are nil")
+		return nil, errors.New("templates is nil")
 	}
 	if cfg.StaticFiles == nil {
-		return nil, errors.New("static files handler is nil")
+		return nil, errors.New("static files is nil")
 	}
 	if cfg.Assertions == nil {
 		return nil, errors.New("assertions is nil")
@@ -49,6 +55,8 @@ func New(cfg Config) (http.Handler, error) {
 }
 
 type Config struct {
+	Service service.Service
+
 	Templates    *template.Template
 	StaticFiles  fs.FS
 	DisableCache bool
@@ -81,12 +89,17 @@ func (router *router) setup() http.Handler {
 	r.Use(exception.Middleware())
 
 	r.Handle("/static", http.StripPrefix("/static/", http.FileServerFS(router.staticFiles)))
+
 	r.HandleFunc("/dashboard", router.dashboard)
+
+	r.HandleFunc("GET /projects", router.listProjects)
+	r.HandleFunc("POST /projects", router.newProject)
 
 	return r
 }
 
 func (router *router) dashboard(w http.ResponseWriter, r *http.Request) {
+	router.assert.NotNil(router.templates)
 	router.assert.NotNil(w)
 	router.assert.NotNil(r)
 
@@ -95,4 +108,16 @@ func (router *router) dashboard(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		exception.InternalServerError(err).ServeHTTP(w, r)
 	}
+}
+
+func (router *router) listProjects(w http.ResponseWriter, r *http.Request) {
+	router.assert.NotNil(router.templates)
+	router.assert.NotNil(w)
+	router.assert.NotNil(r)
+}
+
+func (router *router) newProject(w http.ResponseWriter, r *http.Request) {
+	router.assert.NotNil(router.templates)
+	router.assert.NotNil(w)
+	router.assert.NotNil(r)
 }

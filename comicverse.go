@@ -10,6 +10,7 @@ import (
 	"net/http"
 
 	"forge.capytal.company/capytalcode/project-comicverse/router"
+	"forge.capytal.company/capytalcode/project-comicverse/service"
 	"forge.capytal.company/capytalcode/project-comicverse/static"
 	"forge.capytal.company/capytalcode/project-comicverse/templates"
 	"forge.capytal.company/loreddev/x/tinyssert"
@@ -91,7 +92,20 @@ func (app *app) setup() error {
 
 	var err error
 
+	service, err := service.New(service.Config{
+		DB: app.db,
+		S3: app.s3,
+
+		Assertions: app.assert,
+		Logger:     app.logger,
+	})
+	if err != nil {
+		return errors.Join(errors.New("unable to initiate service"), err)
+	}
+
 	app.handler, err = router.New(router.Config{
+		Service: service,
+
 		Templates:    templates.Templates(),
 		DisableCache: app.developmentMode,
 		StaticFiles:  app.staticFiles,
