@@ -9,6 +9,7 @@ import (
 )
 
 type service struct {
+	db *sql.DB
 	assert tinyssert.Assertions
 	log    *slog.Logger
 }
@@ -27,12 +28,16 @@ func New(cfg Config) (Service, error) {
 		return nil, errors.New("logger should not be a nil pointer")
 	}
 	return &service{
+		db: cfg.DB,
+
 		assert: cfg.Assertions,
 		log:    cfg.Logger,
 	}, nil
 }
 
 type Config struct {
+	DB *sql.DB
+
 	Assertions tinyssert.Assertions
 	Logger     *slog.Logger
 }

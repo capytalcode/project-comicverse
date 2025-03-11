@@ -18,6 +18,7 @@ import (
 
 func New(cfg Config, opts ...Option) (http.Handler, error) {
 	app := &app{
+		db: cfg.DB,
 		staticFiles:     static.Files(),
 		developmentMode: false,
 		context:         context.Background(),
@@ -30,6 +31,9 @@ func New(cfg Config, opts ...Option) (http.Handler, error) {
 		opt(app)
 	}
 
+	if app.db == nil {
+		return nil, errors.New("database interface must not be nil")
+	}
 	if app.staticFiles == nil {
 		return nil, errors.New("static files must not be a nil interface")
 	}
@@ -50,6 +54,7 @@ func New(cfg Config, opts ...Option) (http.Handler, error) {
 }
 
 type Config struct {
+	DB *sql.DB
 }
 
 type Option func(*app)
@@ -75,6 +80,7 @@ func WithDevelopmentMode() Option {
 }
 
 type app struct {
+	db *sql.DB
 	handler http.Handler
 
 	staticFiles     fs.FS
@@ -86,6 +92,7 @@ type app struct {
 }
 
 func (app *app) setup() error {
+	app.assert.NotNil(app.db)
 	app.assert.NotNil(app.staticFiles)
 	app.assert.NotNil(app.context)
 	app.assert.NotNil(app.logger)

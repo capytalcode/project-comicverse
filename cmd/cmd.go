@@ -2,9 +2,11 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"flag"
 	"fmt"
+	"log"
 	"log/slog"
 	"net/http"
 	"os"
@@ -13,6 +15,7 @@ import (
 
 	comicverse "forge.capytal.company/capytalcode/project-comicverse"
 	"forge.capytal.company/loreddev/x/tinyssert"
+	_ "github.com/tursodatabase/go-libsql"
 )
 
 var (
@@ -23,8 +26,25 @@ var (
 	dev          = flag.Bool("dev", false, "Run the server in debug mode.")
 )
 
+var (
+	databaseURL = getEnv("DATABASE_URL", "file://./libsql.db")
+)
+
+func getEnv(key string, d string) string {
+	v := os.Getenv(key)
+	if v == "" {
+		return d
+	}
+	return v
+}
+
 func init() {
 	flag.Parse()
+
+	switch {
+	case databaseURL == "":
+		log.Fatal("DATABASE_URL should not be a empty value")
+	}
 }
 
 func main() {
@@ -43,7 +63,12 @@ func main() {
 	}
 	log := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: level}))
 
-	app := router.New(assertions, log, *dev)
+	db, err := sql.Open("libsql", databaseURL)
+	if err != nil {
+		log.Error("Failed open connection to database", slog.String("error", err.Error()))
+		os.Exit(1)
+	}
+
 	opts := []comicverse.Option{
 		comicverse.WithContext(ctx),
 		comicverse.WithAssertions(assertions),
@@ -58,6 +83,8 @@ func main() {
 	}
 
 	app, err := comicverse.New(comicverse.Config{
+		DB: db,
+		S3: storage,
 	}, opts...)
 	if err != nil {
 		log.Error("Failed to initiate comicverse app", slog.String("error", err.Error()))

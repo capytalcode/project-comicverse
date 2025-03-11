@@ -18,7 +18,7 @@
   in {
     devShells = forAllSystems (system: pkgs: {
       default = pkgs.mkShell {
-        CGO_ENABLED = "0";
+        CGO_ENABLED = "1";
         hardeningDisable = ["all"];
 
         buildInputs = with pkgs; [
@@ -35,6 +35,9 @@
           # Sqlite tools
           sqlite
           lazysql
+
+          # S3
+          awscli
         ];
       };
     });

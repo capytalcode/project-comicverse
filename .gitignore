@@ -1,3 +1,4 @@
 .dist
 wind.css
 .tmp
+.env
