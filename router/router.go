@@ -2,10 +2,12 @@ package router
 
 import (
 	"errors"
+	"fmt"
 	"html/template"
 	"io/fs"
 	"log/slog"
 	"net/http"
+	"path"
 
 	"forge.capytal.company/capytalcode/project-comicverse/service"
 	"forge.capytal.company/loreddev/x/smalltrip"
@@ -94,8 +96,7 @@ func (router *router) setup() http.Handler {
 
 	r.HandleFunc("/dashboard", router.dashboard)
 
-	r.HandleFunc("GET /projects", router.listProjects)
-	r.HandleFunc("POST /projects", router.newProject)
+	r.HandleFunc("/projects/{id...}", router.projects)
 
 	return r
 }
@@ -112,14 +113,44 @@ func (router *router) dashboard(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (router *router) listProjects(w http.ResponseWriter, r *http.Request) {
-	router.assert.NotNil(router.templates)
+func (router *router) projects(w http.ResponseWriter, r *http.Request) {
 	router.assert.NotNil(w)
 	router.assert.NotNil(r)
+
+	id := r.PathValue("id")
+	if id != "" {
+		router.getProject(w, r)
+		return
+	}
+
+	router.newProject(w, r)
 }
 
 func (router *router) newProject(w http.ResponseWriter, r *http.Request) {
-	router.assert.NotNil(router.templates)
 	router.assert.NotNil(w)
 	router.assert.NotNil(r)
+	router.assert.NotNil(router.service)
+
+}
+
+func (router *router) getProject(w http.ResponseWriter, r *http.Request) {
+	router.assert.NotNil(w)
+	router.assert.NotNil(r)
+	router.assert.NotNil(router.service)
+	router.assert.NotNil(router.templates)
+
+	if r.Method != http.MethodGet && r.Method != http.MethodHead {
+		exception.
+			MethodNotAllowed([]string{http.MethodGet, http.MethodHead}).
+			ServeHTTP(w, r)
+		return
+	}
+
+	id := r.PathValue("id")
+	if id == "" {
+		exception.
+			BadRequest(fmt.Errorf(`a valid path value of "id" must be provided`)).
+			ServeHTTP(w, r)
+		return
+	}
 }
