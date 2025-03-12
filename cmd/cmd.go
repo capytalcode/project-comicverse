@@ -69,7 +69,9 @@ func main() {
 
 	assertions := tinyssert.NewDisabledAssertions()
 	if *dev {
-		assertions = tinyssert.NewAssertions()
+		assertions = tinyssert.NewAssertions(tinyssert.Opts{
+			Panic: true,
+		})
 	}
 
 	level := slog.LevelError
