@@ -30,7 +30,7 @@ var (
 )
 
 var (
-	databaseURL = getEnv("DATABASE_URL", "file://./libsql.db")
+	databaseURL = getEnv("DATABASE_URL", "file:./libsql.db")
 
 	awsAccessKeyID     = os.Getenv("AWS_ACCESS_KEY_ID")
 	awsSecretAccessKey = os.Getenv("AWS_SECRET_ACCESS_KEY")
