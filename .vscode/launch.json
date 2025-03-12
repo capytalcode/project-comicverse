@@ -6,15 +6,21 @@
       "type": "go",
       "request": "launch",
       "mode": "debug",
-      "program": "${workspaceFolder}/main.go"
+      "program": "${workspaceFolder}/cmd/cmd.go"
     },
     {
       "name": "Launch APP (Dev)",
       "type": "go",
       "request": "launch",
       "mode": "debug",
-      "program": "${workspaceFolder}/main.go",
-      "args": [ "-dev" ]
+      "program": "${workspaceFolder}/cmd/cmd.go",
+      "args": [
+        "-dev",
+        "-port",
+        "8080",
+        "-hostname",
+        "0.0.0.0"
+      ]
     }
   ]
 }
