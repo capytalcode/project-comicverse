@@ -8,7 +8,6 @@ require (
 	forge.capytal.company/loreddev/x v0.0.0-20250305165122-0ccb26ab783b
 	github.com/aws/aws-sdk-go-v2 v1.36.3
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.78.1
-	github.com/google/uuid v1.6.0
 	github.com/tursodatabase/go-libsql v0.0.0-20241221181756-6121e81fbf92
 )
 
