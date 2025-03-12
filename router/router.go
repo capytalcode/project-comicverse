@@ -178,12 +178,6 @@ func (router *router) getProject(w http.ResponseWriter, r *http.Request) {
 		exception.NotFound().ServeHTTP(w, r)
 		return
 
-	case errors.Is(err, service.ErrProjectInvalidUUID):
-		exception.
-			BadRequest(fmt.Errorf("provided ID %q is not valid", id)).
-			ServeHTTP(w, r)
-		return
-
 	case err != nil:
 		exception.InternalServerError(err).ServeHTTP(w, r)
 		return
