@@ -20,8 +20,9 @@ import (
 
 func New(cfg Config, opts ...Option) (http.Handler, error) {
 	app := &app{
-		db: cfg.DB,
-		s3: cfg.S3,
+		db:     cfg.DB,
+		s3:     cfg.S3,
+		bucket: cfg.Bucket,
 
 		staticFiles:     static.Files(),
 		developmentMode: false,
@@ -40,6 +41,9 @@ func New(cfg Config, opts ...Option) (http.Handler, error) {
 	}
 	if app.s3 == nil {
 		return nil, errors.New("s3 client must not be nil")
+	}
+	if app.bucket == "" {
+		return nil, errors.New("bucket must not be a empty string")
 	}
 
 	if app.staticFiles == nil {
@@ -62,8 +66,9 @@ func New(cfg Config, opts ...Option) (http.Handler, error) {
 }
 
 type Config struct {
-	DB *sql.DB
-	S3 *s3.Client
+	DB     *sql.DB
+	S3     *s3.Client
+	Bucket string
 }
 
 type Option func(*app)
@@ -89,8 +94,9 @@ func WithDevelopmentMode() Option {
 }
 
 type app struct {
-	db *sql.DB
-	s3 *s3.Client
+	db     *sql.DB
+	s3     *s3.Client
+	bucket string
 
 	ctx context.Context
 
@@ -106,6 +112,7 @@ type app struct {
 func (app *app) setup() error {
 	app.assert.NotNil(app.db)
 	app.assert.NotNil(app.s3)
+	app.assert.NotZero(app.bucket)
 	app.assert.NotNil(app.ctx)
 	app.assert.NotNil(app.staticFiles)
 	app.assert.NotNil(app.logger)
@@ -123,8 +130,9 @@ func (app *app) setup() error {
 	}
 
 	service, err := service.New(service.Config{
-		S3: app.s3,
 		DB:     database,
+		S3:     app.s3,
+		Bucket: app.bucket,
 
 		Context: app.ctx,
 

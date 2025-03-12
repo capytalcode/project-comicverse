@@ -36,6 +36,7 @@ var (
 	awsSecretAccessKey = os.Getenv("AWS_SECRET_ACCESS_KEY")
 	awsDefaultRegion   = os.Getenv("AWS_DEFAULT_REGION")
 	awsEndpointURL     = os.Getenv("AWS_ENDPOINT_URL")
+	s3Bucket           = os.Getenv("S3_BUCKET")
 )
 
 func getEnv(key string, d string) string {
@@ -58,6 +59,8 @@ func init() {
 		log.Fatal("AWS_DEFAULT_REGION should not be a empty value")
 	case awsEndpointURL == "":
 		log.Fatal("AWS_ENDPOINT_URL should not be a empty value")
+	case s3Bucket == "":
+		log.Fatal("S3_BUCKET should not be a empty value")
 	}
 }
 
@@ -111,8 +114,9 @@ func main() {
 	}
 
 	app, err := comicverse.New(comicverse.Config{
-		DB: db,
-		S3: storage,
+		DB:     db,
+		S3:     storage,
+		Bucket: s3Bucket,
 	}, opts...)
 	if err != nil {
 		log.Error("Failed to initiate comicverse app", slog.String("error", err.Error()))

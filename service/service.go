@@ -12,6 +12,8 @@ import (
 
 type Service struct {
 	db     *database.Database
+	s3     *s3.Client
+	bucket string
 
 	ctx context.Context
 
@@ -26,6 +28,9 @@ func New(cfg Config) (*Service, error) {
 	if cfg.S3 == nil {
 		return nil, errors.New("s3 client should not be a nil pointer")
 	}
+	if cfg.Bucket == "" {
+		return nil, errors.New("bucket should not be a empty string")
+	}
 	if cfg.Context == nil {
 		return nil, errors.New("context should not be a nil interface")
 	}
@@ -35,8 +40,10 @@ func New(cfg Config) (*Service, error) {
 	if cfg.Logger == nil {
 		return nil, errors.New("logger should not be a nil pointer")
 	}
-		db: cfg.DB,
 	return &Service{
+		db:     cfg.DB,
+		s3:     cfg.S3,
+		bucket: cfg.Bucket,
 
 		ctx: cfg.Context,
 
@@ -46,8 +53,9 @@ func New(cfg Config) (*Service, error) {
 }
 
 type Config struct {
-	S3 *s3.Client
 	DB     *database.Database
+	S3     *s3.Client
+	Bucket string
 
 	Context context.Context
 
