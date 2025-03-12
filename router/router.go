@@ -15,7 +15,7 @@ import (
 )
 
 type router struct {
-	service service.Service
+	service *service.Service
 
 	templates   *template.Template
 	staticFiles fs.FS
@@ -43,6 +43,8 @@ func New(cfg Config) (http.Handler, error) {
 	}
 
 	r := &router{
+		service: cfg.Service,
+
 		templates:   cfg.Templates,
 		staticFiles: cfg.StaticFiles,
 
@@ -55,7 +57,7 @@ func New(cfg Config) (http.Handler, error) {
 }
 
 type Config struct {
-	Service service.Service
+	Service *service.Service
 
 	Templates    *template.Template
 	StaticFiles  fs.FS

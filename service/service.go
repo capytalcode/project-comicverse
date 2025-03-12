@@ -10,8 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 )
 
-type service struct {
-	s3 *s3.Client
+type Service struct {
 	db     *database.Database
 
 	ctx context.Context
@@ -20,7 +19,7 @@ type service struct {
 	log    *slog.Logger
 }
 
-func New(cfg Config) (Service, error) {
+func New(cfg Config) (*Service, error) {
 	if cfg.DB == nil {
 		return nil, errors.New("database should not be a nil pointer")
 	}
@@ -36,8 +35,8 @@ func New(cfg Config) (Service, error) {
 	if cfg.Logger == nil {
 		return nil, errors.New("logger should not be a nil pointer")
 	}
-	return &service{
 		db: cfg.DB,
+	return &Service{
 
 		ctx: cfg.Context,
 
@@ -54,9 +53,4 @@ type Config struct {
 
 	Assertions tinyssert.Assertions
 	Logger     *slog.Logger
-}
-
-type Service interface {
-	ListProjects()
-	NewProject()
 }
