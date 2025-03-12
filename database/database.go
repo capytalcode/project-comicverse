@@ -4,11 +4,12 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"fmt"
 	"log/slog"
 
 	"forge.capytal.company/loreddev/x/tinyssert"
 )
+
+var ErrNoRows = sql.ErrNoRows
 
 type Database struct {
 	sql *sql.DB
@@ -72,19 +73,19 @@ func (db *Database) setup() error {
 
 	log.Debug("Creating tables")
 
-	tables := []Table{
-		&Project{},
-	}
-
 	tx, err := db.sql.BeginTx(db.ctx, nil)
 	if err != nil {
 		return errors.Join(errors.New("unable to start transaction to create tables"), err)
 	}
 
-	for _, t := range tables {
-		_, err := tx.Exec(t.setup())
+	setups := []func(*sql.Tx) error{
+		db.setupProjects,
+	}
+
+	for _, setup := range setups {
+		err := setup(tx)
 		if err != nil {
-			return errors.Join(fmt.Errorf("error while trying to create table %T", t), err)
+			return err
 		}
 	}
 
@@ -94,22 +95,4 @@ func (db *Database) setup() error {
 	}
 
 	return nil
-}
-
-func (db *Database) Insert(t Table) error {
-	q, err := t.insert()
-	if err != nil {
-		return errors.Join(fmt.Errorf("creating query to insert table %T resulted in error", t), err)
-	}
-
-	_, err = db.sql.ExecContext(db.ctx, q)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-type Table interface {
-	setup() string
-	insert() (string, error)
 }
