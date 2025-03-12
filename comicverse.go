@@ -116,7 +116,7 @@ func (app *app) setup() error {
 		SQL:        app.db,
 		Context:    app.ctx,
 		Assertions: app.assert,
-		Logger:     app.logger,
+		Logger:     app.logger.WithGroup("database"),
 	})
 	if err != nil {
 		return errors.Join(errors.New("unable to create database struct"), err)
@@ -129,7 +129,7 @@ func (app *app) setup() error {
 		Context: app.ctx,
 
 		Assertions: app.assert,
-		Logger:     app.logger,
+		Logger:     app.logger.WithGroup("service"),
 	})
 	if err != nil {
 		return errors.Join(errors.New("unable to initiate service"), err)
@@ -143,7 +143,7 @@ func (app *app) setup() error {
 		StaticFiles:  app.staticFiles,
 
 		Assertions: app.assert,
-		Logger:     app.logger,
+		Logger:     app.logger.WithGroup("router"),
 	})
 	if err != nil {
 		return errors.Join(errors.New("unable to initiate router"), err)
