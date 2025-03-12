@@ -1,0 +1,9 @@
+{{define "project"}}
+{{template "layout-page-start" (args "Title" .Title)}}
+<main class="justify-center align-middle w-full h-full">
+	<h1>{{.Title}}</h1>
+	<p>{{.ID}}</p>
+	<article>{{.Contents}}</article>
+</main>
+{{template "layout-page-end"}}
+{{end}}

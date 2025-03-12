@@ -131,6 +131,24 @@ func (router *router) newProject(w http.ResponseWriter, r *http.Request) {
 	router.assert.NotNil(r)
 	router.assert.NotNil(router.service)
 
+	if r.Method != http.MethodPost {
+		exception.
+			MethodNotAllowed([]string{http.MethodPost}).
+			ServeHTTP(w, r)
+		return
+	}
+
+	router.log.Debug("Creating new project", slog.Any("servce", router.service))
+	p, err := router.service.CreateProject()
+	if err != nil {
+		exception.InternalServerError(err).ServeHTTP(w, r)
+		return
+	}
+
+	router.log.Debug("New project created", slog.String("id", p.ID))
+	router.assert.NotZero(p.ID)
+
+	http.Redirect(w, r, path.Join(r.URL.Path, p.ID), http.StatusSeeOther)
 }
 
 func (router *router) getProject(w http.ResponseWriter, r *http.Request) {
@@ -151,6 +169,29 @@ func (router *router) getProject(w http.ResponseWriter, r *http.Request) {
 		exception.
 			BadRequest(fmt.Errorf(`a valid path value of "id" must be provided`)).
 			ServeHTTP(w, r)
+		return
+	}
+
+	p, err := router.service.GetProject(id)
+	switch {
+	case errors.Is(err, service.ErrProjectNotExists):
+		exception.NotFound().ServeHTTP(w, r)
+		return
+
+	case errors.Is(err, service.ErrProjectInvalidUUID):
+		exception.
+			BadRequest(fmt.Errorf("provided ID %q is not valid", id)).
+			ServeHTTP(w, r)
+		return
+
+	case err != nil:
+		exception.InternalServerError(err).ServeHTTP(w, r)
+		return
+	}
+
+	err = router.templates.ExecuteTemplate(w, "project", p)
+	if err != nil {
+		exception.InternalServerError(err).ServeHTTP(w, r)
 		return
 	}
 }
