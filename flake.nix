@@ -35,6 +35,7 @@
           # Sqlite tools
           sqlite
           lazysql
+          litecli
 
           # S3
           awscli
