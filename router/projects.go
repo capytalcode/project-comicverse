@@ -3,7 +3,6 @@ package router
 import (
 	"errors"
 	"fmt"
-	"log/slog"
 	"net/http"
 	"path"
 
@@ -36,14 +35,12 @@ func (router *router) createProject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	router.log.Debug("Creating new project", slog.Any("servce", router.service))
 	p, err := router.service.CreateProject()
 	if err != nil {
 		exception.InternalServerError(err).ServeHTTP(w, r)
 		return
 	}
 
-	router.log.Debug("New project created", slog.String("id", p.ID))
 	router.assert.NotZero(p.ID)
 
 	http.Redirect(w, r, path.Join(r.URL.Path, p.ID), http.StatusSeeOther)
