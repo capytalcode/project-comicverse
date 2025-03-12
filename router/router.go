@@ -47,8 +47,8 @@ func New(cfg Config) (http.Handler, error) {
 
 		templates:   cfg.Templates,
 		staticFiles: cfg.StaticFiles,
+		cache:       !cfg.DisableCache,
 
-		cache:  !cfg.DisableCache,
 		assert: cfg.Assertions,
 		log:    cfg.Logger,
 	}
