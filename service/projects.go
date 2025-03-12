@@ -15,10 +15,7 @@ import (
 
 const projectIDLength = 6
 
-var (
-	ErrProjectNotExists   = errors.New("project does not exists in database")
-	ErrProjectInvalidUUID = errors.New("UUID provided is invalid")
-)
+var ErrProjectNotExists = errors.New("project does not exists in database")
 
 type Project struct {
 	XMLName  xml.Name `xml:"body"`
@@ -37,7 +34,7 @@ func (s *Service) CreateProject() (Project, error) {
 
 	id, err := randstr.NewHex(projectIDLength)
 	if err != nil {
-		return Project{}, err
+		return Project{}, errors.Join(errors.New("creating hexadecimal ID returned error"), err)
 	}
 
 	title := "New Project"
