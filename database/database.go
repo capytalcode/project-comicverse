@@ -41,7 +41,7 @@ func New(cfg Config) (*Database, error) {
 	}
 
 	if err := db.setup(); err != nil {
-		return nil, errors.New("error while setting up Database struct")
+		return nil, errors.Join(errors.New("error while setting up Database struct"), err)
 	}
 
 	return db, nil
