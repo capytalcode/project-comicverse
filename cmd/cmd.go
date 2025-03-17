@@ -14,6 +14,7 @@ import (
 	"syscall"
 
 	comicverse "forge.capytal.company/capytalcode/project-comicverse"
+	"forge.capytal.company/capytalcode/project-comicverse/templates"
 	"forge.capytal.company/loreddev/x/tinyssert"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -111,6 +112,9 @@ func main() {
 	if *dev {
 		d := os.DirFS("./assets")
 		opts = append(opts, comicverse.WithAssets(d))
+
+		t := templates.NewHotTemplates(os.DirFS("./templates"))
+		opts = append(opts, comicverse.WithTemplates(t))
 
 		opts = append(opts, comicverse.WithDevelopmentMode())
 	}

@@ -13,7 +13,7 @@ dev/server:
 			--build.cmd "go build -o tmp/bin/main ./cmd" \
 			--build.bin "tmp/bin/main" \
 			--build.exclude_dir "node_modules" \
-			--build.include_ext "go,html" \
+			--build.include_ext "go" \
 			--build.stop_on_error "false" \
 			--misc.clean_on_exit true \
 			-- -dev -port $(PORT) -hostname 0.0.0.0

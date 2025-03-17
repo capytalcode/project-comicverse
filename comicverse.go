@@ -26,6 +26,7 @@ func New(cfg Config, opts ...Option) (http.Handler, error) {
 		bucket: cfg.Bucket,
 
 		assets:          assets.Files(),
+		templates:       templates.Templates(),
 		developmentMode: false,
 		ctx:             context.Background(),
 
@@ -49,6 +50,9 @@ func New(cfg Config, opts ...Option) (http.Handler, error) {
 
 	if app.assets == nil {
 		return nil, errors.New("static files must not be a nil interface")
+	}
+	if app.templates == nil {
+		return nil, errors.New("templates must not be a nil interface")
 	}
 
 	if app.ctx == nil {
@@ -82,6 +86,10 @@ func WithAssets(f fs.FS) Option {
 	return func(app *app) { app.assets = joinedfs.Join(f, app.assets) }
 }
 
+func WithTemplates(t templates.ITemplate) Option {
+	return func(app *app) { app.templates = t }
+}
+
 func WithAssertions(a tinyssert.Assertions) Option {
 	return func(app *app) { app.assert = a }
 }
@@ -102,6 +110,7 @@ type app struct {
 	ctx context.Context
 
 	assets          fs.FS
+	templates       templates.ITemplate
 	developmentMode bool
 
 	handler http.Handler
@@ -147,9 +156,9 @@ func (app *app) setup() error {
 	app.handler, err = router.New(router.Config{
 		Service: service,
 
-		Templates:    templates.Templates(),
+		Templates:    app.templates,
 		DisableCache: app.developmentMode,
-		Assets:  app.assets,
+		Assets:       app.assets,
 
 		Assertions: app.assert,
 		Logger:     app.logger.WithGroup("router"),
