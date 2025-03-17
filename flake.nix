@@ -30,7 +30,7 @@
           delve
 
           # TailwindCSS
-          tailwindcss
+          tailwindcss_4
 
           # Sqlite tools
           sqlite
