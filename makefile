@@ -27,9 +27,13 @@ dev/assets:
 dev:
 	$(MAKE) -j2 dev/assets dev/server
 
+build/assets:
+	tailwindcss \
+		-i ./assets/stylesheets/tailwind.css \
+		-o ./assets/stylesheets/out.css \
+		--minify
 
-build:
-	go generate
+build: build/assets
 	go build -o ./.dist/app .
 
 run: build

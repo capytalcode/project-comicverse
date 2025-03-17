@@ -5,8 +5,6 @@ import (
 	"io/fs"
 )
 
-//go:generate tailwindcss -o assets/stylesheets/out.css
-
 //go:embed stylesheets/out.css
 var files embed.FS
 
