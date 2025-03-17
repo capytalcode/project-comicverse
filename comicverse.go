@@ -24,7 +24,7 @@ func New(cfg Config, opts ...Option) (http.Handler, error) {
 		s3:     cfg.S3,
 		bucket: cfg.Bucket,
 
-		staticFiles:     assets.Files(),
+		assets:          assets.Files(),
 		developmentMode: false,
 		ctx:             context.Background(),
 
@@ -46,7 +46,7 @@ func New(cfg Config, opts ...Option) (http.Handler, error) {
 		return nil, errors.New("bucket must not be a empty string")
 	}
 
-	if app.staticFiles == nil {
+	if app.assets == nil {
 		return nil, errors.New("static files must not be a nil interface")
 	}
 
@@ -100,7 +100,7 @@ type app struct {
 
 	ctx context.Context
 
-	staticFiles     fs.FS
+	assets          fs.FS
 	developmentMode bool
 
 	handler http.Handler
@@ -114,7 +114,7 @@ func (app *app) setup() error {
 	app.assert.NotNil(app.s3)
 	app.assert.NotZero(app.bucket)
 	app.assert.NotNil(app.ctx)
-	app.assert.NotNil(app.staticFiles)
+	app.assert.NotNil(app.assets)
 	app.assert.NotNil(app.logger)
 
 	var err error
@@ -148,7 +148,7 @@ func (app *app) setup() error {
 
 		Templates:    templates.Templates(),
 		DisableCache: app.developmentMode,
-		StaticFiles:  app.staticFiles,
+		Assets:  app.assets,
 
 		Assertions: app.assert,
 		Logger:     app.logger.WithGroup("router"),
