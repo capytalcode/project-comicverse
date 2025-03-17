@@ -1,8 +1,6 @@
 module forge.capytal.company/capytalcode/project-comicverse
 
-go 1.23.3
-
-toolchain go1.23.6
+go 1.24.1
 
 require (
 	forge.capytal.company/loreddev/x v0.0.0-20250305165122-0ccb26ab783b
