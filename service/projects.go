@@ -113,3 +113,22 @@ func (s *Service) GetProject(id string) (Project, error) {
 
 	return p, nil
 }
+
+func (s *Service) ListProjects() ([]Project, error) {
+	s.assert.NotNil(s.db)
+
+	ps, err := s.db.ListProjects()
+	if err != nil {
+		return []Project{}, err
+	}
+
+	p := make([]Project, len(ps))
+	for i := range p {
+		p[i] = Project{
+			ID:    ps[i].ID,
+			Title: ps[i].Title,
+		}
+	}
+
+	return p, nil
+}
