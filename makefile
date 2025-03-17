@@ -19,7 +19,10 @@ dev/server:
 			-- -dev -port $(PORT) -hostname 0.0.0.0
 
 dev/assets:
-	tailwindcss -o ./static/css/wind.css -w
+	tailwindcss \
+		-i ./assets/stylesheets/tailwind.css \
+		-o ./assets/stylesheets/out.css \
+		--watch
 
 dev:
 	$(MAKE) -j2 dev/assets dev/server
