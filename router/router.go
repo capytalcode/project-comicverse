@@ -17,9 +17,9 @@ import (
 type router struct {
 	service *service.Service
 
-	templates   *template.Template
-	staticFiles fs.FS
-	cache       bool
+	templates *template.Template
+	assets    fs.FS
+	cache     bool
 
 	assert tinyssert.Assertions
 	log    *slog.Logger
@@ -32,7 +32,7 @@ func New(cfg Config) (http.Handler, error) {
 	if cfg.Templates == nil {
 		return nil, errors.New("templates is nil")
 	}
-	if cfg.StaticFiles == nil {
+	if cfg.Assets == nil {
 		return nil, errors.New("static files is nil")
 	}
 	if cfg.Assertions == nil {
@@ -45,9 +45,9 @@ func New(cfg Config) (http.Handler, error) {
 	r := &router{
 		service: cfg.Service,
 
-		templates:   cfg.Templates,
-		staticFiles: cfg.StaticFiles,
-		cache:       !cfg.DisableCache,
+		templates: cfg.Templates,
+		assets:    cfg.Assets,
+		cache:     !cfg.DisableCache,
 
 		assert: cfg.Assertions,
 		log:    cfg.Logger,
@@ -60,7 +60,7 @@ type Config struct {
 	Service *service.Service
 
 	Templates    *template.Template
-	StaticFiles  fs.FS
+	Assets       fs.FS
 	DisableCache bool
 
 	Assertions tinyssert.Assertions
@@ -69,7 +69,7 @@ type Config struct {
 
 func (router *router) setup() http.Handler {
 	router.assert.NotNil(router.log)
-	router.assert.NotNil(router.staticFiles)
+	router.assert.NotNil(router.assets)
 
 	log := router.log
 
@@ -90,7 +90,7 @@ func (router *router) setup() http.Handler {
 	r.Use(exception.PanicMiddleware())
 	r.Use(exception.Middleware())
 
-	r.Handle("/static", http.StripPrefix("/static/", http.FileServerFS(router.staticFiles)))
+	r.Handle("/assets", http.StripPrefix("/assets/", http.FileServerFS(router.assets)))
 
 	r.HandleFunc("/dashboard", router.dashboard)
 
@@ -101,11 +101,18 @@ func (router *router) setup() http.Handler {
 
 func (router *router) dashboard(w http.ResponseWriter, r *http.Request) {
 	router.assert.NotNil(router.templates)
+	router.assert.NotNil(router.service)
 	router.assert.NotNil(w)
 	router.assert.NotNil(r)
 
+	p, err := router.service.ListProjects()
+	if err != nil {
+		exception.InternalServerError(err).ServeHTTP(w, r)
+		return
+	}
+
 	w.WriteHeader(http.StatusOK)
-	err := router.templates.ExecuteTemplate(w, "dashboard", nil)
+	err = router.templates.ExecuteTemplate(w, "dashboard", p)
 	if err != nil {
 		exception.InternalServerError(err).ServeHTTP(w, r)
 	}
