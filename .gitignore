@@ -1,5 +1,5 @@
 .dist
-wind.css
+out.css
 .tmp
 .env
 *.db
