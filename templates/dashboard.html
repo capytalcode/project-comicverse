@@ -1,12 +1,32 @@
 {{define "dashboard"}}
 {{template "layout-page-start" (args "Title" "Dashboard")}}
-<main class="justify-center align-middle w-full h-full">
-	{{if .Projects}}
-	<h2>Projects</h2>
+<main class="h-full w-full justify-center px-5 py-10 align-middle">
+	{{if and (ne . nil) (ne (len .) 0)}}
+	<section class="flex h-64 flex-col gap-5 bg-red-500">
+		<div class="flex justify-between">
+			<h2 class="text-2xl">Projects</h2>
+			<form action="/projects/" method="post">
+				<button class="rounded-full bg-slate-700 p-1 px-3 text-sm text-slate-100">
+					New project
+				</button>
+			</form>
+		</div>
+		<div class="grid h-full grid-flow-col grid-rows-1 overflow-scroll gap-5">
+			{{range .}}
+			<a href="/projects/{{.ID}}" class="w-38 grid h-full grid-rows-2 bg-green-500">
+				<div class="bg-blue-500 p-2">Image</div>
+				<div class="p-2">
+					<h3>{{.Title}}</h3>
+					<p>{{.ID}}</p>
+				</div>
+			</a>
+			{{end}}
+		</div>
+	</section>
 	{{else}}
-	<div class="w-full h-screen flex justify-center items-center fixed top">
+	<div class="top fixed flex h-screen w-full items-center justify-center">
 		<form action="/projects/" method="post">
-			<button class="bg-slate-700 text-slate-100 p-2 px-5 rounded-full">
+			<button class="rounded-full bg-slate-700 p-2 px-5 text-slate-100">
 				New project
 			</button>
 		</form>
