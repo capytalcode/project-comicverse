@@ -9,10 +9,10 @@ import (
 	"log/slog"
 	"net/http"
 
+	"forge.capytal.company/capytalcode/project-comicverse/assets"
 	"forge.capytal.company/capytalcode/project-comicverse/database"
 	"forge.capytal.company/capytalcode/project-comicverse/router"
 	"forge.capytal.company/capytalcode/project-comicverse/service"
-	"forge.capytal.company/capytalcode/project-comicverse/static"
 	"forge.capytal.company/capytalcode/project-comicverse/templates"
 	"forge.capytal.company/loreddev/x/tinyssert"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
@@ -24,7 +24,7 @@ func New(cfg Config, opts ...Option) (http.Handler, error) {
 		s3:     cfg.S3,
 		bucket: cfg.Bucket,
 
-		staticFiles:     static.Files(),
+		staticFiles:     assets.Files(),
 		developmentMode: false,
 		ctx:             context.Background(),
 
