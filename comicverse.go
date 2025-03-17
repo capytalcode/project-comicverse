@@ -11,6 +11,7 @@ import (
 
 	"forge.capytal.company/capytalcode/project-comicverse/assets"
 	"forge.capytal.company/capytalcode/project-comicverse/database"
+	"forge.capytal.company/capytalcode/project-comicverse/internals/joinedfs"
 	"forge.capytal.company/capytalcode/project-comicverse/router"
 	"forge.capytal.company/capytalcode/project-comicverse/service"
 	"forge.capytal.company/capytalcode/project-comicverse/templates"
@@ -77,8 +78,8 @@ func WithContext(ctx context.Context) Option {
 	return func(app *app) { app.ctx = ctx }
 }
 
-func WithStaticFiles(f fs.FS) Option {
-	return func(app *app) { app.staticFiles = f }
+func WithAssets(f fs.FS) Option {
+	return func(app *app) { app.assets = joinedfs.Join(f, app.assets) }
 }
 
 func WithAssertions(a tinyssert.Assertions) Option {

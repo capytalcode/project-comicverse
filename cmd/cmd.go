@@ -109,8 +109,8 @@ func main() {
 	}
 
 	if *dev {
-		d := os.DirFS("./static")
-		opts = append(opts, comicverse.WithStaticFiles(d))
+		d := os.DirFS("./assets")
+		opts = append(opts, comicverse.WithAssets(d))
 
 		opts = append(opts, comicverse.WithDevelopmentMode())
 	}
