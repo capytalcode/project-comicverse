@@ -132,3 +132,27 @@ func (s *Service) ListProjects() ([]Project, error) {
 
 	return p, nil
 }
+
+func (s *Service) DeleteProject(id string) error {
+	s.assert.NotNil(s.db)
+	s.assert.NotNil(s.s3)
+	s.assert.NotZero(s.bucket)
+	s.assert.NotNil(s.ctx)
+	s.assert.NotZero(id)
+
+	err := s.db.DeleteProject(id)
+	if err != nil {
+		return err
+	}
+
+	f := fmt.Sprintf("%s.comic.xml", id)
+	_, err = s.s3.DeleteObject(s.ctx, &s3.DeleteObjectInput{
+		Bucket: &s.bucket,
+		Key:    &f,
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
