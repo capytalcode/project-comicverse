@@ -126,3 +126,31 @@ func (db *Database) ListProjects() ([]Project, error) {
 
 	return ps, nil
 }
+
+func (db *Database) DeleteProject(id string) error {
+	db.assert.NotNil(db.sql)
+	db.assert.NotNil(db.ctx)
+	db.assert.NotNil(db.log)
+	db.assert.NotZero(id)
+
+	q := fmt.Sprintf(`DELETE FROM projects WHERE id = '%s'`, id)
+
+	db.log.Debug("Deleting from Projects", slog.String("query", q))
+
+	tx, err := db.sql.BeginTx(db.ctx, nil)
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.ExecContext(db.ctx, q)
+	if err != nil {
+		return err
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
