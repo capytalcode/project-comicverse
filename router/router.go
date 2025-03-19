@@ -5,6 +5,7 @@ import (
 	"io/fs"
 	"log/slog"
 	"net/http"
+	"strings"
 
 	"forge.capytal.company/capytalcode/project-comicverse/service"
 	"forge.capytal.company/capytalcode/project-comicverse/templates"
@@ -116,4 +117,17 @@ func (router *router) dashboard(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		exception.InternalServerError(err).ServeHTTP(w, r)
 	}
+}
+
+func getMethod(r *http.Request) string {
+	if r.Method == http.MethodGet || r.Method == http.MethodHead {
+		return r.Method
+	}
+
+	m := r.FormValue("x-method")
+	if m == "" {
+		return r.Method
+	}
+
+	return strings.ToUpper(m)
 }
