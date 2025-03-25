@@ -13,24 +13,26 @@
 		</div>
 		<div class="grid h-full grid-flow-col grid-rows-1 justify-start gap-5 overflow-scroll">
 			{{range .}}
-			<a href="/projects/{{.ID}}" class="w-38 grid h-full grid-rows-2 bg-slate-500">
+			<div class="w-38 grid h-full grid-rows-2 bg-slate-500">
 				<div class="bg-blue-500 p-2">Image</div>
 				<div class="p-2">
-					<h3>{{.Title}}</h3>
-					<p>{{.ID}}</p>
-					<form action="/projects/{{.ID}}" method="post">
+					<a href="/projects/{{.ID}}">
+						<h3>{{.Title}}</h3>
+						<p>{{.ID}}</p>
+					</a>
+					<form action="/projects/{{.ID}}/" method="post">
 						<input type="hidden" name="x-method" value="delete">
 						<button class="rounded-full bg-red-700 p-1 px-3 text-sm text-slate-100">
 							Delete
 						</button>
 					</form>
 				</div>
-			</a>
+			</div>
 			{{end}}
 		</div>
 	</section>
 	{{else}}
-	<div class="top fixed flex h-screen w-full items-center justify-center">
+	<div class="fixed flex h-screen w-full items-center justify-center top-0 left-0">
 		<form action="/projects/" method="post">
 			<button class="rounded-full bg-slate-700 p-2 px-5 text-slate-100">
 				New project
