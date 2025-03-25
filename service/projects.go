@@ -11,6 +11,7 @@ import (
 	"forge.capytal.company/capytalcode/project-comicverse/database"
 	"forge.capytal.company/capytalcode/project-comicverse/internals/randstr"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 )
 
 const projectIDLength = 6
@@ -161,15 +162,31 @@ func (s *Service) DeleteProject(id string) error {
 	s.assert.NotNil(s.ctx)
 	s.assert.NotZero(id)
 
-	err := s.db.DeleteProject(id)
+	p, err := s.GetProject(id)
+	if err != nil {
+		return errors.Join(errors.New("unable to get information of project"), err)
+	}
+
+	err = s.db.DeleteProject(id)
 	if err != nil {
 		return err
 	}
 
+	s.log.Debug("Deleting project on storage", slog.String("id", id))
+
+	files := []types.ObjectIdentifier{}
+
 	f := fmt.Sprintf("%s.comic.json", id)
-	_, err = s.s3.DeleteObject(s.ctx, &s3.DeleteObjectInput{
+	files = append(files, types.ObjectIdentifier{Key: &f})
+
+	for k := range p.Pages {
+		f := fmt.Sprintf("%s/%s", id, k)
+		files = append(files, types.ObjectIdentifier{Key: &f})
+	}
+
+	_, err = s.s3.DeleteObjects(s.ctx, &s3.DeleteObjectsInput{
+		Delete: &types.Delete{Objects: files},
 		Bucket: &s.bucket,
-		Key:    &f,
 	})
 	if err != nil {
 		return err
