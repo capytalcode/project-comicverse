@@ -17,7 +17,7 @@ func (router *router) projects(w http.ResponseWriter, r *http.Request) {
 
 	switch getMethod(r) {
 	case http.MethodGet, http.MethodHead:
-		if id := r.PathValue("id"); id != "" {
+		if id := r.PathValue("ID"); id != "" {
 			router.getProject(w, r)
 		} else {
 			router.listProjects(w, r)
@@ -27,11 +27,11 @@ func (router *router) projects(w http.ResponseWriter, r *http.Request) {
 		router.createProject(w, r)
 
 	case http.MethodDelete:
-		if id := r.PathValue("id"); id != "" {
+		if id := r.PathValue("ID"); id != "" {
 			router.deleteProject(w, r)
 		} else {
 			exception.
-				BadRequest(errors.New(`missing "id" path value`)).
+				BadRequest(errors.New(`missing "ID" path value`)).
 				ServeHTTP(w, r)
 		}
 
@@ -81,10 +81,10 @@ func (router *router) getProject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id := r.PathValue("id")
+	id := r.PathValue("ID")
 	if id == "" {
 		exception.
-			BadRequest(fmt.Errorf(`a valid path value of "id" must be provided`)).
+			BadRequest(fmt.Errorf(`a valid path value of "ID" must be provided`)).
 			ServeHTTP(w, r)
 		return
 	}
@@ -154,10 +154,10 @@ func (router *router) deleteProject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id := r.PathValue("id")
+	id := r.PathValue("ID")
 	if id == "" {
 		exception.
-			BadRequest(fmt.Errorf(`a valid path value of "id" must be provided`)).
+			BadRequest(fmt.Errorf(`a valid path value of "ID" must be provided`)).
 			ServeHTTP(w, r)
 		return
 	}

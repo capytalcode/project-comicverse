@@ -91,11 +91,12 @@ func (router *router) setup() http.Handler {
 	r.Use(exception.PanicMiddleware())
 	r.Use(exception.Middleware())
 
-	r.Handle("/assets", http.StripPrefix("/assets/", http.FileServerFS(router.assets)))
+	r.Handle("/assets/", http.StripPrefix("/assets/", http.FileServerFS(router.assets)))
 
-	r.HandleFunc("/dashboard", router.dashboard)
+	r.HandleFunc("/dashboard/", router.dashboard)
 
-	r.HandleFunc("/projects/{id...}", router.projects)
+	r.HandleFunc("/projects/{$}", router.projects)
+	r.HandleFunc("/projects/{ID}/", router.projects)
 
 	return r
 }
