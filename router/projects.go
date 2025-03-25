@@ -65,7 +65,7 @@ func (router *router) createProject(w http.ResponseWriter, r *http.Request) {
 
 	router.assert.NotZero(p.ID)
 
-	http.Redirect(w, r, path.Join(r.URL.Path, p.ID), http.StatusSeeOther)
+	http.Redirect(w, r, fmt.Sprintf("%s/", path.Join(r.URL.Path, p.ID)), http.StatusSeeOther)
 }
 
 func (router *router) getProject(w http.ResponseWriter, r *http.Request) {
