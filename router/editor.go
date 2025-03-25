@@ -37,12 +37,16 @@ func (router *router) pages(w http.ResponseWriter, r *http.Request) {
 	case http.MethodPost:
 		router.addPage(w, r)
 
+	case http.MethodDelete:
+		router.deletePage(w, r)
+
 	default:
 		exception.
 			MethodNotAllowed([]string{
 				http.MethodGet,
 				http.MethodHead,
 				http.MethodPost,
+				http.MethodDelete,
 			}).
 			ServeHTTP(w, r)
 	}
@@ -105,3 +109,22 @@ func (router *router) getPage(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (router *router) deletePage(w http.ResponseWriter, r *http.Request) {
+	router.assert.NotNil(w)
+	router.assert.NotNil(r)
+	router.assert.NotNil(router.service)
+
+	id := r.PathValue("ID")
+	router.assert.NotZero(id, "This method should be used after the path values are checked")
+
+	imgID := r.PathValue("PageID")
+	router.assert.NotZero(imgID, "This method should be used after the path values are checked")
+
+	err := router.service.DeletePage(id, imgID)
+	if err != nil {
+		exception.InternalServerError(err).ServeHTTP(w, r)
+		return
+	}
+
+	http.Redirect(w, r, fmt.Sprintf("/projects/%s/", id), http.StatusSeeOther)
+}

@@ -80,3 +80,29 @@ func (s *Service) GetPage(projectID string, imgID string) (io.Reader, error) {
 	return res.Body, nil
 }
 
+func (s *Service) DeletePage(projectID string, id string) error {
+	s.assert.NotNil(s.ctx)
+	s.assert.NotNil(s.s3)
+	s.assert.NotNil(s.bucket)
+	s.assert.NotZero(projectID)
+	s.assert.NotNil(id)
+
+	p, err := s.GetProject(projectID)
+	if err != nil {
+		return errors.Join(errors.New("unable to get project"), err)
+	}
+
+	k := fmt.Sprintf("%s/%s", projectID, id)
+	_, err = s.s3.DeleteObject(s.ctx, &s3.DeleteObjectInput{
+		Key:    &k,
+		Bucket: &s.bucket,
+	})
+	if err != nil {
+		return err
+	}
+
+	delete(p.Pages, id)
+
+	err = s.UpdateProject(projectID, p)
+	return err
+}
