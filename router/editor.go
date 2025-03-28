@@ -22,10 +22,11 @@ func (router *router) pages(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	pageID := r.PathValue("PageID")
+
 	switch getMethod(r) {
 	case http.MethodGet, http.MethodHead:
-		imgID := r.PathValue("PageID")
-		if imgID == "" {
+		if pageID == "" {
 			exception.
 				BadRequest(fmt.Errorf(`a valid path value of "PageID" must be provided`)).
 				ServeHTTP(w, r)
@@ -38,6 +39,13 @@ func (router *router) pages(w http.ResponseWriter, r *http.Request) {
 		router.addPage(w, r)
 
 	case http.MethodDelete:
+		if pageID == "" {
+			exception.
+				BadRequest(fmt.Errorf(`a valid path value of "PageID" must be provided`)).
+				ServeHTTP(w, r)
+			return
+		}
+
 		router.deletePage(w, r)
 
 	default:
@@ -84,8 +92,8 @@ func (router *router) getPage(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("ID")
 	router.assert.NotZero(id, "This method should be used after the path values are checked")
 
-	imgID := r.PathValue("PageID")
-	router.assert.NotZero(imgID, "This method should be used after the path values are checked")
+	pageID := r.PathValue("PageID")
+	router.assert.NotZero(pageID, "This method should be used after the path values are checked")
 
 	page, err := router.service.GetPage(id, pageID)
 	if errors.Is(err, service.ErrPageNotExists) {
@@ -117,10 +125,10 @@ func (router *router) deletePage(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("ID")
 	router.assert.NotZero(id, "This method should be used after the path values are checked")
 
-	imgID := r.PathValue("PageID")
-	router.assert.NotZero(imgID, "This method should be used after the path values are checked")
+	pageID := r.PathValue("PageID")
+	router.assert.NotZero(pageID, "This method should be used after the path values are checked")
 
-	err := router.service.DeletePage(id, imgID)
+	err := router.service.DeletePage(id, pageID)
 	if err != nil {
 		exception.InternalServerError(err).ServeHTTP(w, r)
 		return
