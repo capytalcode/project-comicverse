@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"slices"
 
 	"forge.capytal.company/capytalcode/project-comicverse/internals/randstr"
 	awshttp "github.com/aws/aws-sdk-go-v2/aws/transport/http"
@@ -21,7 +22,10 @@ type Project struct {
 	Pages []ProjectPage `json:"pages"`
 }
 
-type ProjectPage struct{}
+type ProjectPage struct {
+	ID           string                     `json:"id"`
+	Image        io.ReadCloser              `json:"-"`
+}
 
 func (s *Service) AddPage(projectID string, img io.Reader) error {
 	s.assert.NotNil(s.ctx)
@@ -56,14 +60,25 @@ func (s *Service) AddPage(projectID string, img io.Reader) error {
 	return err
 }
 
-func (s *Service) GetPage(projectID string, imgID string) (io.Reader, error) {
+func (s *Service) GetPage(projectID string, pageID string) (ProjectPage, error) {
 	s.assert.NotNil(s.ctx)
 	s.assert.NotNil(s.s3)
 	s.assert.NotNil(s.bucket)
 	s.assert.NotZero(projectID)
-	s.assert.NotNil(imgID)
+	s.assert.NotNil(pageID)
 
-	k := fmt.Sprintf("%s/%s", projectID, imgID)
+	p, err := s.GetProject(projectID)
+	if err != nil {
+		return ProjectPage{}, errors.Join(errors.New("unable to get project"), err)
+	}
+
+	pageIndex := slices.IndexFunc(p.Pages, func(p ProjectPage) bool { return p.ID == pageID })
+	if pageIndex == -1 {
+		return ProjectPage{}, ErrPageNotExists
+	}
+	page := p.Pages[pageIndex]
+
+	k := fmt.Sprintf("%s/%s", projectID, pageID)
 	res, err := s.s3.GetObject(s.ctx, &s3.GetObjectInput{
 		Key:    &k,
 		Bucket: &s.bucket,
@@ -71,13 +86,19 @@ func (s *Service) GetPage(projectID string, imgID string) (io.Reader, error) {
 	if err != nil {
 		var resErr *awshttp.ResponseError
 		if errors.As(err, &resErr) && resErr.ResponseError.HTTPStatusCode() == http.StatusNotFound {
-			return nil, errors.Join(ErrPageNotExists, resErr)
+			// TODO: This would probably be better in some background "maintenance" worker
+			p.Pages = slices.Delete(p.Pages, pageIndex, pageIndex)
+			_ = s.UpdateProject(projectID, p)
+
+			return ProjectPage{}, errors.Join(ErrPageNotExists, resErr)
 		}
-		return nil, err
+		return ProjectPage{}, err
 	}
 
 	s.assert.NotNil(res.Body)
-	return res.Body, nil
+	page.Image = res.Body
+
+	return page, nil
 }
 
 func (s *Service) DeletePage(projectID string, id string) error {

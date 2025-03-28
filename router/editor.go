@@ -87,7 +87,7 @@ func (router *router) getPage(w http.ResponseWriter, r *http.Request) {
 	imgID := r.PathValue("PageID")
 	router.assert.NotZero(imgID, "This method should be used after the path values are checked")
 
-	img, err := router.service.GetPage(id, imgID)
+	page, err := router.service.GetPage(id, pageID)
 	if errors.Is(err, service.ErrPageNotExists) {
 		exception.NotFound(exception.WithError(err)).ServeHTTP(w, r)
 		return
@@ -97,10 +97,10 @@ func (router *router) getPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if i, ok := img.(io.WriterTo); ok {
+	if i, ok := page.Image.(io.WriterTo); ok {
 		_, err = i.WriteTo(w)
 	} else {
-		_, err = io.Copy(w, img)
+		_, err = io.Copy(w, page.Image)
 	}
 
 	if err != nil {
