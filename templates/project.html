@@ -8,35 +8,54 @@
 	<main class="overflow-y-scroll flex justify-center col-span-3 py-20">
 		<div class="flex flex-col gap-10 h-fit">
 			{{range $page := .Pages}}
-			<section id="{{$page.ID}}" class="bg-blue-500 w-100">
+			<section id="{{$page.ID}}" class="w-fit">
 				<!-- 
 					INFO: The interaction form could be another page that is shown
 					when "Add Interaction" is clicked. Said page could be also a partial
 					than can replace the current image using htmx, so it is
 					compatible with JavaScript enabled or not.
 				-->
-				<form action="/projects/{{$.ID}}/pages/{{$page.ID}}/interactions/" method="post">
-					<div class="flex">
-						<div class="relative flex">
-							<div class="absolute z-2 w-full h-full top-0 left-0">
-								{{range $key, $interaction := $page.Interactions}}
-								<a class="absolute" href="{{$interaction.URL}}"
-									style="top:{{$interaction.Y}}%;left:{{$interaction.X}}%;">
-									<span
-										class="bg-red-200 opacity-10 block w-10 h-10 transform -translate-x-[50%] -translate-y-[50%]"></span>
-								</a>
-								{{end}}
+				<div class="flex flex-row">
+					<form action="/projects/{{$.ID}}/pages/{{$page.ID}}/interactions/" method="post" class="w-100">
+						<div class="flex">
+							{{if (gt (len $page.Interactions) 0)}}
+							<div class="relative flex">
+								<div class="absolute z-2 w-full h-full top-0 left-0">
+									{{range $interactionID, $interaction := $page.Interactions}}
+									<a class="absolute" href="{{$interaction.URL}}"
+										style="top:{{$interaction.Y}}%;left:{{$interaction.X}}%;">
+										<span
+											class="bg-red-200 opacity-10 block w-10 h-10 transform -translate-x-[50%] -translate-y-[50%]"></span>
+									</a>
+									{{end}}
+								</div>
+								<img src="/projects/{{$.ID}}/pages/{{$page.ID}}/" class="z-1 relative">
 							</div>
+							{{else}}
 							<img src="/projects/{{$.ID}}/pages/{{$page.ID}}/" class="z-1 relative">
+							{{end}}
+							<input type="range" min="0" max="100" name="y" style="writing-mode: vertical-lr;">
 						</div>
-						<input type="range" min="0" max="100" name="y" style="writing-mode: vertical-lr;">
+						<input type="range" min="0" max="100" name="x" class="w-full">
+						<input type="url" required name="link" class="bg-slate-300" placeholder="url of interaction">
+						<button class="rounded-full bg-blue-700 p-1 px-3 text-sm text-slate-100">
+							Add interaction
+						</button>
+					</form>
+					{{if (gt (len $page.Interactions) 0)}}
+					<div class="flex flex-col gap-2">
+						{{range $interactionID, $interaction := $page.Interactions}}
+						<form action="/projects/{{$.ID}}/pages/{{$page.ID}}/interactions/{{$interactionID}}/"
+							method="post">
+							<input type="hidden" name="x-method" value="delete">
+							<button class="rounded-full bg-red-700 p-1 px-3 text-sm text-slate-100">
+								&#x1F5D1;&#xFE0F;{{$interaction.URL}}
+							</button>
+						</form>
+						{{end}}
 					</div>
-					<input type="range" min="0" max="100" name="x" class="w-full">
-					<input type="url" required name="link" class="bg-slate-300" placeholder="url of interaction">
-					<button class="rounded-full bg-blue-700 p-1 px-3 text-sm text-slate-100">
-						Add interaction
-					</button>
-				</form>
+					{{end}}
+				</div>
 				<form action="/projects/{{$.ID}}/pages/{{$page.ID}}/" method="post">
 					<input type="hidden" name="x-method" value="delete">
 					<button class="rounded-full bg-red-700 p-1 px-3 text-sm text-slate-100">
