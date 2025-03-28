@@ -24,7 +24,14 @@ type Project struct {
 
 type ProjectPage struct {
 	ID           string                     `json:"id"`
+	Interactions map[string]PageInteraction `json:"interactions"`
 	Image        io.ReadCloser              `json:"-"`
+}
+
+type PageInteraction struct {
+	URL string `json:"url"`
+	X   uint16 `json:"x"`
+	Y   uint16 `json:"y"`
 }
 
 func (s *Service) AddPage(projectID string, img io.Reader) error {
@@ -96,6 +103,8 @@ func (s *Service) GetPage(projectID string, pageID string) (ProjectPage, error) 
 	}
 
 	s.assert.NotNil(res.Body)
+	s.assert.NotNil(page.Interactions)
+
 	page.Image = res.Body
 
 	return page, nil

@@ -45,7 +45,7 @@ func (s *Service) CreateProject() (Project, error) {
 	p := Project{
 		ID:    id,
 		Title: title,
-		Pages: map[string]ProjectPage{},
+		Pages: []ProjectPage{},
 	}
 
 	c, err := json.Marshal(p)
