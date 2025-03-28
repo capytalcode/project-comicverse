@@ -168,10 +168,21 @@ func (router *router) interactions(w http.ResponseWriter, r *http.Request) {
 	case http.MethodPost:
 		router.addInteraction(w, r)
 
+	case http.MethodDelete:
+		if interactionID == "" {
+			exception.
+				BadRequest(fmt.Errorf(`a valid path value of "InteractionID" must be provided`)).
+				ServeHTTP(w, r)
+			return
+		}
+
+		router.deleteInteraction(w, r)
+
 	default:
 		exception.
 			MethodNotAllowed([]string{
 				http.MethodPost,
+				http.MethodDelete,
 			}).
 			ServeHTTP(w, r)
 	}
@@ -238,3 +249,35 @@ func (router *router) addInteraction(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, fmt.Sprintf("/projects/%s/", id), http.StatusSeeOther)
 }
 
+func (router *router) deleteInteraction(w http.ResponseWriter, r *http.Request) {
+	router.assert.NotNil(w)
+	router.assert.NotNil(r)
+	router.assert.NotNil(router.service)
+
+	id := r.PathValue("ID")
+	router.assert.NotZero(id, "This method should be used after the path values are checked")
+
+	pageID := r.PathValue("PageID")
+	router.assert.NotZero(pageID, "This method should be used after the path values are checked")
+
+	interactionID := r.PathValue("InteractionID")
+	router.assert.NotZero(interactionID, "This method should be used after the path values are checked")
+
+	// TODO: Methods to manipulate interactions, instead of router need to do this logic
+	page, err := router.service.GetPage(id, pageID)
+	if err != nil {
+		exception.InternalServerError(err).ServeHTTP(w, r)
+		return
+	}
+	page.Image = nil // HACK: Prevent image update on S3
+
+	delete(page.Interactions, interactionID)
+
+	err = router.service.UpdatePage(id, page)
+	if err != nil {
+		exception.InternalServerError(err).ServeHTTP(w, r)
+		return
+	}
+
+	http.Redirect(w, r, fmt.Sprintf("/projects/%s/", id), http.StatusSeeOther)
+}
