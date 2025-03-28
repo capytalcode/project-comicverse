@@ -110,6 +110,48 @@ func (s *Service) GetPage(projectID string, pageID string) (ProjectPage, error) 
 	return page, nil
 }
 
+func (s *Service) UpdatePage(projectID string, page ProjectPage) error {
+	s.assert.NotNil(s.ctx)
+	s.assert.NotNil(s.s3)
+	s.assert.NotNil(s.bucket)
+	s.assert.NotZero(projectID)
+	s.assert.NotZero(page.ID)
+	s.assert.NotNil(page.Interactions)
+
+	p, err := s.GetProject(projectID)
+	if err != nil {
+		return errors.Join(errors.New("unable to get project"), err)
+	}
+
+	pageIndex := slices.IndexFunc(p.Pages, func(p ProjectPage) bool { return p.ID == page.ID })
+	if pageIndex == -1 {
+		return ErrPageNotExists
+	}
+	p.Pages[pageIndex] = page
+
+	// TODO: Probably a "lastUpdated" timestamp in the ProjectPage data would be better
+	// so we don't update equal images. Changing the image in ProjectPage would be better
+	// using a method, or could be completely decoupled from the struct.
+	if page.Image != nil {
+		k := fmt.Sprintf("%s/%s", projectID, page.ID)
+		_, err = s.s3.PutObject(s.ctx, &s3.PutObjectInput{
+			Key:    &k,
+			Body:   page.Image,
+			Bucket: &s.bucket,
+		})
+		if err != nil {
+			return errors.Join(errors.New("error while trying to update image"), err)
+		}
+	}
+
+	err = s.UpdateProject(projectID, p)
+	if err != nil {
+		return errors.Join(errors.New("error while trying to update project"), err)
+	}
+
+	return nil
+}
+
 func (s *Service) DeletePage(projectID string, id string) error {
 	s.assert.NotNil(s.ctx)
 	s.assert.NotNil(s.s3)
