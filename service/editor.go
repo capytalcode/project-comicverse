@@ -16,9 +16,9 @@ const pageIDLength = 6
 var ErrPageNotExists = errors.New("page does not exists in storage")
 
 type Project struct {
-	ID    string                 `json:"id"`
-	Title string                 `json:"title"`
-	Pages map[string]ProjectPage `json:"pages"`
+	ID    string        `json:"id"`
+	Title string        `json:"title"`
+	Pages []ProjectPage `json:"pages"`
 }
 
 type ProjectPage struct{}
@@ -40,7 +40,7 @@ func (s *Service) AddPage(projectID string, img io.Reader) error {
 		return errors.Join(errors.New("unable to get project"), err)
 	}
 
-	p.Pages[id] = ProjectPage{}
+	p.Pages = append(p.Pages, ProjectPage{ID: id, Interactions: map[string]PageInteraction{}})
 
 	k := fmt.Sprintf("%s/%s", projectID, id)
 	_, err = s.s3.PutObject(s.ctx, &s3.PutObjectInput{
@@ -101,7 +101,7 @@ func (s *Service) DeletePage(projectID string, id string) error {
 		return err
 	}
 
-	delete(p.Pages, id)
+	p.Pages = slices.DeleteFunc(p.Pages, func(p ProjectPage) bool { return p.ID == id })
 
 	err = s.UpdateProject(projectID, p)
 	return err
