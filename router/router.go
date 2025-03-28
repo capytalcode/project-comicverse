@@ -99,6 +99,8 @@ func (router *router) setup() http.Handler {
 	r.HandleFunc("/projects/{ID}/", router.projects)
 	r.HandleFunc("/projects/{ID}/pages/{$}", router.pages)
 	r.HandleFunc("/projects/{ID}/pages/{PageID}", router.pages)
+	r.HandleFunc("/projects/{ID}/pages/{PageID}/interactions/{$}", router.interactions)
+	r.HandleFunc("/projects/{ID}/pages/{PageID}/interactions/{InteractionID}", router.interactions)
 
 	return r
 }
