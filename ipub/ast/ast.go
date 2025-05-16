@@ -34,6 +34,8 @@ type Element interface {
 	InsertBefore(self, v1, insertee Element)
 	InsertAfter(self, v1, insertee Element)
 
+	xml.Unmarshaler
+}
 
 type BaseElement struct {
 	next       Element
@@ -175,6 +177,41 @@ func (e *BaseElement) InsertBefore(self, v1, insertee Element) {
 		insertee.SetNextSibling(c)
 		c.SetPreviousSibling(insertee)
 		insertee.SetParent(self)
+	}
+}
+
+func (e *BaseElement) UnmarshalChildren(self Element, d *xml.Decoder, start xml.StartElement) error {
+	for {
+		token, err := d.Token()
+		if err != nil {
+			return err
+		}
+		if err == io.EOF {
+			return nil
+		}
+
+		switch tt := token.(type) {
+		case xml.StartElement:
+			i := slices.IndexFunc(tt.Attr, func(a xml.Attr) bool {
+				return a.Name.Local == "data-ipub-element"
+			})
+			if i == -1 {
+				return fmt.Errorf("element kind not specified")
+			}
+
+			kind := tt.Attr[i].Value
+			kt, ok := elementKindList[ElementKind(kind)]
+			if !ok {
+				return fmt.Errorf("element kind not found")
+			}
+
+			err := d.DecodeElement(kt, &tt)
+			if err != nil && err != io.EOF {
+				return err
+			}
+
+			e.AppendChild(self, kt)
+		}
 	}
 }
 
