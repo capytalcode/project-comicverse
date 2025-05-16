@@ -186,3 +186,11 @@ func ensureIsolated(e Element) {
 
 type ElementKind string
 
+var elementKindList = map[ElementKind]Element{}
+
+func NewElementKind(name string, t Element) ElementKind {
+	k := ElementKind(name)
+	elementKindList[k] = t
+
+	return k
+}
