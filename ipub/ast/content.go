@@ -11,7 +11,11 @@ type Content struct {
 
 var KindContent = NewElementKind("content", &Content{})
 
-func (n *Content) Kind() ElementKind {
+func (e Content) Name() ElementName {
+	return ElementName{Local: "section"}
+}
+
+func (e Content) Kind() ElementKind {
 	return KindContent
 }
 

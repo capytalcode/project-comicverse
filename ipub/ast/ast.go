@@ -2,12 +2,14 @@ package ast
 
 import (
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"io"
 	"slices"
 )
 
 type Element interface {
+	Name() ElementName
 	Kind() ElementKind
 
 	NextSibling() Element
@@ -181,6 +183,18 @@ func (e *BaseElement) InsertBefore(self, v1, insertee Element) {
 }
 
 func (e *BaseElement) UnmarshalChildren(self Element, d *xml.Decoder, start xml.StartElement) error {
+	elErr := fmt.Errorf("unable to unmarshal element kind %q", self.Kind())
+
+	if n := self.Name(); n != (xml.Name{}) {
+		if n != start.Name {
+			return errors.Join(
+				elErr,
+				fmt.Errorf("element has different name (%q) than expected (%q)",
+					fmtXMLName(start.Name), fmtXMLName(n)),
+			)
+		}
+	}
+
 	for {
 		token, err := d.Token()
 		if err != nil {
@@ -196,7 +210,7 @@ func (e *BaseElement) UnmarshalChildren(self Element, d *xml.Decoder, start xml.
 				return a.Name.Local == "data-ipub-element"
 			})
 			if i == -1 {
-				return fmt.Errorf("element kind not specified")
+				return errors.Join(elErr, fmt.Errorf("element kind not specified"))
 			}
 
 			kind := tt.Attr[i].Value

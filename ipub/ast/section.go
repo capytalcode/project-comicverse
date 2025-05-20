@@ -14,7 +14,11 @@ type Body struct {
 
 var KindBody = NewElementKind("body", &Body{})
 
-func (n *Body) Kind() ElementKind {
+func (e Body) Name() ElementName {
+	return ElementName{Local: "body"}
+}
+
+func (e Body) Kind() ElementKind {
 	return KindBody
 }
 
