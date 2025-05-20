@@ -206,25 +206,28 @@ func (e *BaseElement) UnmarshalChildren(self Element, d *xml.Decoder, start xml.
 
 		switch tt := token.(type) {
 		case xml.StartElement:
+			elErr = errors.Join(elErr, fmt.Errorf("unable to unmarshal child element %q", fmtXMLName(tt.Name)))
+
 			i := slices.IndexFunc(tt.Attr, func(a xml.Attr) bool {
-				return a.Name.Local == "data-ipub-element"
+				return a.Name == elementKindAttrName
 			})
 			if i == -1 {
 				return errors.Join(elErr, fmt.Errorf("element kind not specified"))
 			}
 
-			kind := tt.Attr[i].Value
-			kt, ok := elementKindList[ElementKind(kind)]
-			if !ok {
-				return fmt.Errorf("element kind not found")
+			var k ElementKind
+			if err := k.UnmarshalXMLAttr(tt.Attr[i]); err != nil {
+				return errors.Join(elErr, err)
 			}
 
-			err := d.DecodeElement(kt, &tt)
+			c := k.Element()
+
+			err := d.DecodeElement(c, &tt)
 			if err != nil && err != io.EOF {
 				return err
 			}
 
-			e.AppendChild(self, kt)
+			e.AppendChild(self, c)
 		}
 	}
 }
@@ -235,13 +238,61 @@ func ensureIsolated(e Element) {
 	}
 }
 
-type ElementKind string
+type (
+	ElementName = xml.Name
+	ElementKind string
+)
 
-var elementKindList = map[ElementKind]Element{}
-
-func NewElementKind(name string, t Element) ElementKind {
-	k := ElementKind(name)
-	elementKindList[k] = t
-
+func NewElementKind(kind string, e Element) ElementKind {
+	k := ElementKind(kind)
+	if _, ok := elementKindList[k]; ok {
+		panic(fmt.Sprintf("Element kind %q is already registered", k))
+	}
+	elementKindList[k] = e
 	return k
 }
+
+var (
+	_ xml.MarshalerAttr   = ElementKind("")
+	_ xml.UnmarshalerAttr = (*ElementKind)(nil)
+	_ fmt.Stringer        = ElementKind("")
+)
+
+func (k ElementKind) MarshalXMLAttr(n xml.Name) (xml.Attr, error) {
+	if n != elementKindAttrName {
+		return xml.Attr{}, ErrInvalidAttrName{Actual: n, Expected: elementKindAttrName}
+	}
+
+	return xml.Attr{
+		Name:  elementKindAttrName,
+		Value: k.String(),
+	}, nil
+}
+
+func (k *ElementKind) UnmarshalXMLAttr(attr xml.Attr) error {
+	if attr.Name != elementKindAttrName {
+		return ErrInvalidAttrName{Actual: attr.Name, Expected: elementKindAttrName}
+	}
+
+	ak := ElementKind(attr.Value)
+	if _, ok := elementKindList[ak]; !ok {
+		return ErrInvalidAttrValue{Attr: attr, Message: "element kind not registered"}
+	}
+
+	*k = ak
+
+	return nil
+}
+
+func (k ElementKind) String() string {
+	return string(k)
+}
+
+func (k ElementKind) Element() Element {
+	return elementKindList[k]
+}
+
+var (
+	elementKindList     = make(map[ElementKind]Element)
+	elementKindAttrName = xml.Name{Local: "data-ipub-element"}
+)
