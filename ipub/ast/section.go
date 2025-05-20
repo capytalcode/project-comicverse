@@ -5,7 +5,8 @@ import (
 )
 
 type Section struct {
-	Body Body `xml:"body"`
+	XMLName xml.Name `xml:"html"`
+	Body    *Body    `xml:"body"`
 }
 
 type Body struct {
@@ -22,6 +23,10 @@ func (e Body) Kind() ElementKind {
 	return KindBody
 }
 
-func (n *Body) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
-	return n.UnmarshalChildren(n, d, start)
+func (e *Body) MarshalXML(enc *xml.Encoder, start xml.StartElement) error {
+	return e.MarshalXMLElement(e, enc, start)
+}
+
+func (e *Body) UnmarshalXML(dec *xml.Decoder, start xml.StartElement) error {
+	return e.UnmarshalXMLElement(e, dec, start)
 }

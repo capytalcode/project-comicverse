@@ -36,6 +36,7 @@ type Element interface {
 	InsertBefore(self, v1, insertee Element)
 	InsertAfter(self, v1, insertee Element)
 
+	xml.Marshaler
 	xml.Unmarshaler
 }
 
@@ -182,7 +183,7 @@ func (e *BaseElement) InsertBefore(self, v1, insertee Element) {
 	}
 }
 
-func (e *BaseElement) UnmarshalChildren(self Element, d *xml.Decoder, start xml.StartElement) error {
+func (e *BaseElement) UnmarshalXMLElement(self Element, d *xml.Decoder, start xml.StartElement) error {
 	elErr := fmt.Errorf("unable to unmarshal element kind %q", self.Kind())
 
 	if n := self.Name(); n != (xml.Name{}) {
@@ -230,6 +231,38 @@ func (e *BaseElement) UnmarshalChildren(self Element, d *xml.Decoder, start xml.
 			e.AppendChild(self, c)
 		}
 	}
+}
+
+func (e *BaseElement) MarshalXMLElement(self Element, enc *xml.Encoder, start xml.StartElement) error {
+	elErr := fmt.Errorf("unable to marshal element kind %q", self.Kind())
+
+	if n := self.Name(); n != (xml.Name{}) {
+		start.Name = self.Name()
+	}
+
+	ka, err := self.Kind().MarshalXMLAttr(elementKindAttrName)
+	if err != nil {
+		return errors.Join(elErr, err)
+	}
+
+	start.Attr = append(start.Attr, ka)
+
+	data := struct {
+		Children []Element `xml:",any"`
+	}{Children: []Element{}}
+
+	for c := self.FirstChild(); c != nil; {
+		data.Children = append(data.Children, c)
+		c = c.NextSibling()
+	}
+
+	err = enc.EncodeElement(&data, start)
+	if err != nil && err != io.EOF {
+		return err
+		return errors.Join(elErr, err)
+	}
+
+	return nil
 }
 
 func ensureIsolated(e Element) {
