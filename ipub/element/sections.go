@@ -7,9 +7,21 @@ type Section struct {
 	Body    Body     `xml:"body"`
 }
 
+var KindSection = NewElementKind("section", Section{})
+
+func (Section) Kind() ElementKind {
+	return KindSection
+}
+
 type Body struct {
 	XMLName xml.Name `xml:"body"`
 	Test    string   `xml:"test,attr"`
+}
+
+var KindBody = NewElementKind("body", Body{})
+
+func (Body) Kind() ElementKind {
+	return KindBody
 }
 
 type Paragraph struct {
@@ -20,3 +32,8 @@ type Paragraph struct {
 	Text string `xml:",chardata"`
 }
 
+var KindParagraph = NewElementKind("paragraph", Paragraph{})
+
+func (Paragraph) Kind() ElementKind {
+	return KindParagraph
+}
