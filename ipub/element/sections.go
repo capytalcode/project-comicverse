@@ -16,6 +16,8 @@ func (Section) Kind() ElementKind {
 type Body struct {
 	XMLName xml.Name `xml:"body"`
 	Test    string   `xml:"test,attr"`
+
+	Children ElementChildren `xml:",any"`
 }
 
 var KindBody = NewElementKind("body", Body{})
