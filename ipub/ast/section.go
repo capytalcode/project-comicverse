@@ -10,23 +10,11 @@ type Section struct {
 }
 
 type Body struct {
-	BaseElement
+	BaseNode
 }
 
-var KindBody = NewElementKind("body", &Body{})
+var KindBody = NewNodeKind("body", &Body{})
 
-func (e Body) Name() ElementName {
-	return ElementName{Local: "body"}
-}
-
-func (e Body) Kind() ElementKind {
+func (e Body) Kind() NodeKind {
 	return KindBody
-}
-
-func (e *Body) MarshalXML(enc *xml.Encoder, start xml.StartElement) error {
-	return e.MarshalXMLElement(e, enc, start)
-}
-
-func (e *Body) UnmarshalXML(dec *xml.Decoder, start xml.StartElement) error {
-	return e.UnmarshalXMLElement(e, dec, start)
 }

@@ -1,95 +1,87 @@
 package ast
 
 import (
-	"encoding/xml"
-	"errors"
 	"fmt"
-	"io"
-	"slices"
 )
 
-type Element interface {
-	Name() ElementName
-	Kind() ElementKind
+type Node interface {
+	Kind() NodeKind
 
-	NextSibling() Element
-	SetNextSibling(Element)
+	NextSibling() Node
+	SetNextSibling(Node)
 
-	PreviousSibling() Element
-	SetPreviousSibling(Element)
+	PreviousSibling() Node
+	SetPreviousSibling(Node)
 
-	Parent() Element
-	SetParent(Element)
+	Parent() Node
+	SetParent(Node)
 
 	HasChildren() bool
 	ChildCount() uint
 
-	FirstChild() Element
-	LastChild() Element
+	FirstChild() Node
+	LastChild() Node
 
-	AppendChild(self, v Element)
-	RemoveChild(self, v Element)
+	AppendChild(self, v Node)
+	RemoveChild(self, v Node)
 
-	RemoveChildren(self Element)
-	ReplaceChild(self, v1, insertee Element)
+	RemoveChildren(self Node)
+	ReplaceChild(self, v1, insertee Node)
 
-	InsertBefore(self, v1, insertee Element)
-	InsertAfter(self, v1, insertee Element)
-
-	xml.Marshaler
-	xml.Unmarshaler
+	InsertBefore(self, v1, insertee Node)
+	InsertAfter(self, v1, insertee Node)
 }
 
-type BaseElement struct {
-	next       Element
-	prev       Element
-	parent     Element
-	fisrtChild Element
-	lastChild  Element
+type BaseNode struct {
+	next       Node
+	prev       Node
+	parent     Node
+	fisrtChild Node
+	lastChild  Node
 	childCount uint
 }
 
-func (e *BaseElement) NextSibling() Element {
+func (e *BaseNode) NextSibling() Node {
 	return e.next
 }
 
-func (e *BaseElement) SetNextSibling(v Element) {
+func (e *BaseNode) SetNextSibling(v Node) {
 	e.next = v
 }
 
-func (e *BaseElement) PreviousSibling() Element {
+func (e *BaseNode) PreviousSibling() Node {
 	return e.prev
 }
 
-func (e *BaseElement) SetPreviousSibling(v Element) {
+func (e *BaseNode) SetPreviousSibling(v Node) {
 	e.prev = v
 }
 
-func (e *BaseElement) Parent() Element {
+func (e *BaseNode) Parent() Node {
 	return e.parent
 }
 
-func (e *BaseElement) SetParent(v Element) {
+func (e *BaseNode) SetParent(v Node) {
 	e.parent = v
 }
 
-func (e *BaseElement) HasChildren() bool {
+func (e *BaseNode) HasChildren() bool {
 	return e.fisrtChild != nil
 }
 
-func (e *BaseElement) ChildCount() uint {
+func (e *BaseNode) ChildCount() uint {
 	return e.childCount
 }
 
-func (e *BaseElement) FirstChild() Element {
+func (e *BaseNode) FirstChild() Node {
 	return e.fisrtChild
 }
 
-func (e *BaseElement) LastChild() Element {
+func (e *BaseNode) LastChild() Node {
 	return e.lastChild
 }
 
-func (e *BaseElement) AppendChild(self, v Element) {
+func (e *BaseNode) AppendChild(self, v Node) {
 	ensureIsolated(v)
 
 	if e.fisrtChild == nil {
@@ -107,7 +99,7 @@ func (e *BaseElement) AppendChild(self, v Element) {
 	e.childCount++
 }
 
-func (e *BaseElement) RemoveChild(self, v Element) {
+func (e *BaseNode) RemoveChild(self, v Node) {
 	if v.Parent() != self {
 		return
 	}
@@ -136,7 +128,7 @@ func (e *BaseElement) RemoveChild(self, v Element) {
 	v.SetPreviousSibling(nil)
 }
 
-func (e *BaseElement) RemoveChildren(_ Element) {
+func (e *BaseNode) RemoveChildren(_ Node) {
 	for c := e.fisrtChild; c != nil; {
 		c.SetParent(nil)
 		c.SetPreviousSibling(nil)
@@ -149,16 +141,16 @@ func (e *BaseElement) RemoveChildren(_ Element) {
 	e.childCount = 0
 }
 
-func (e *BaseElement) ReplaceChild(self, v1, insertee Element) {
+func (e *BaseNode) ReplaceChild(self, v1, insertee Node) {
 	e.InsertBefore(self, v1, insertee)
 	e.RemoveChild(self, v1)
 }
 
-func (e *BaseElement) InsertAfter(self, v1, insertee Element) {
+func (e *BaseNode) InsertAfter(self, v1, insertee Node) {
 	e.InsertBefore(self, v1.NextSibling(), insertee)
 }
 
-func (e *BaseElement) InsertBefore(self, v1, insertee Element) {
+func (e *BaseNode) InsertBefore(self, v1, insertee Node) {
 	e.childCount++
 	if v1 == nil {
 		e.AppendChild(self, insertee)
@@ -183,149 +175,21 @@ func (e *BaseElement) InsertBefore(self, v1, insertee Element) {
 	}
 }
 
-func (e *BaseElement) UnmarshalXMLElement(self Element, d *xml.Decoder, start xml.StartElement) error {
-	elErr := fmt.Errorf("unable to unmarshal element kind %q", self.Kind())
-
-	if n := self.Name(); n != (xml.Name{}) {
-		if n != start.Name {
-			return errors.Join(
-				elErr,
-				fmt.Errorf("element has different name (%q) than expected (%q)",
-					fmtXMLName(start.Name), fmtXMLName(n)),
-			)
-		}
-	}
-
-	for {
-		token, err := d.Token()
-		if err != nil {
-			return err
-		}
-		if err == io.EOF {
-			return nil
-		}
-
-		switch tt := token.(type) {
-		case xml.StartElement:
-			elErr = errors.Join(elErr, fmt.Errorf("unable to unmarshal child element %q", fmtXMLName(tt.Name)))
-
-			i := slices.IndexFunc(tt.Attr, func(a xml.Attr) bool {
-				return a.Name == elementKindAttrName
-			})
-			if i == -1 {
-				return errors.Join(elErr, fmt.Errorf("element kind not specified"))
-			}
-
-			var k ElementKind
-			if err := k.UnmarshalXMLAttr(tt.Attr[i]); err != nil {
-				return errors.Join(elErr, err)
-			}
-
-			c := k.Element()
-
-			err := d.DecodeElement(c, &tt)
-			if err != nil && err != io.EOF {
-				return err
-			}
-
-			e.AppendChild(self, c)
-		}
-	}
-}
-
-func (e *BaseElement) MarshalXMLElement(self Element, enc *xml.Encoder, start xml.StartElement) error {
-	elErr := fmt.Errorf("unable to marshal element kind %q", self.Kind())
-
-	if n := self.Name(); n != (xml.Name{}) {
-		start.Name = self.Name()
-	}
-
-	ka, err := self.Kind().MarshalXMLAttr(elementKindAttrName)
-	if err != nil {
-		return errors.Join(elErr, err)
-	}
-
-	start.Attr = append(start.Attr, ka)
-
-	data := struct {
-		Children []Element `xml:",any"`
-	}{Children: []Element{}}
-
-	for c := self.FirstChild(); c != nil; {
-		data.Children = append(data.Children, c)
-		c = c.NextSibling()
-	}
-
-	err = enc.EncodeElement(&data, start)
-	if err != nil && err != io.EOF {
-		return err
-		return errors.Join(elErr, err)
-	}
-
-	return nil
-}
-
-func ensureIsolated(e Element) {
+func ensureIsolated(e Node) {
 	if p := e.Parent(); p != nil {
 		p.RemoveChild(p, e)
 	}
 }
 
-type (
-	ElementName = xml.Name
-	ElementKind string
-)
+type NodeKind string
 
-func NewElementKind(kind string, e Element) ElementKind {
-	k := ElementKind(kind)
+func NewNodeKind(kind string, e Node) NodeKind {
+	k := NodeKind(kind)
 	if _, ok := elementKindList[k]; ok {
-		panic(fmt.Sprintf("Element kind %q is already registered", k))
+		panic(fmt.Sprintf("Node kind %q is already registered", k))
 	}
 	elementKindList[k] = e
 	return k
 }
 
-var (
-	_ xml.MarshalerAttr   = ElementKind("")
-	_ xml.UnmarshalerAttr = (*ElementKind)(nil)
-	_ fmt.Stringer        = ElementKind("")
-)
-
-func (k ElementKind) MarshalXMLAttr(n xml.Name) (xml.Attr, error) {
-	if n != elementKindAttrName {
-		return xml.Attr{}, ErrInvalidAttrName{Actual: n, Expected: elementKindAttrName}
-	}
-
-	return xml.Attr{
-		Name:  elementKindAttrName,
-		Value: k.String(),
-	}, nil
-}
-
-func (k *ElementKind) UnmarshalXMLAttr(attr xml.Attr) error {
-	if attr.Name != elementKindAttrName {
-		return ErrInvalidAttrName{Actual: attr.Name, Expected: elementKindAttrName}
-	}
-
-	ak := ElementKind(attr.Value)
-	if _, ok := elementKindList[ak]; !ok {
-		return ErrInvalidAttrValue{Attr: attr, Message: "element kind not registered"}
-	}
-
-	*k = ak
-
-	return nil
-}
-
-func (k ElementKind) String() string {
-	return string(k)
-}
-
-func (k ElementKind) Element() Element {
-	return elementKindList[k]
-}
-
-var (
-	elementKindList     = make(map[ElementKind]Element)
-	elementKindAttrName = xml.Name{Local: "data-ipub-element"}
-)
+var elementKindList = make(map[NodeKind]Node)
