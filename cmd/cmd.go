@@ -68,13 +68,6 @@ func init() {
 func main() {
 	ctx := context.Background()
 
-	assertions := tinyssert.NewDisabledAssertions()
-	if *dev {
-		assertions = tinyssert.NewAssertions(tinyssert.Opts{
-			Panic: true,
-		})
-	}
-
 	level := slog.LevelError
 	if *dev {
 		level = slog.LevelDebug
@@ -82,6 +75,14 @@ func main() {
 		level = slog.LevelInfo
 	}
 	log := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: level}))
+
+	assertions := tinyssert.NewDisabled()
+	if *dev {
+		assertions = tinyssert.New(
+			tinyssert.WithPanic(),
+			tinyssert.WithLogger(log),
+		)
+	}
 
 	db, err := sql.Open("libsql", databaseURL)
 	if err != nil {

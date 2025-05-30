@@ -8,7 +8,6 @@ import (
 	"io"
 	"log/slog"
 
-	"forge.capytal.company/capytalcode/project-comicverse/database"
 	"forge.capytal.company/capytalcode/project-comicverse/internals/randstr"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
@@ -76,9 +75,9 @@ func (s *Service) GetProject(id string) (Project, error) {
 	s.assert.NotZero(id)
 
 	res, err := s.db.GetProject(id)
-	if errors.Is(err, database.ErrNoRows) {
-		return Project{}, errors.Join(ErrProjectNotExists, err)
-	}
+	// if errors.Is(err, database.ErrNoRows) {
+	// 	return Project{}, errors.Join(ErrProjectNotExists, err)
+	// }
 	if err != nil {
 		return Project{}, err
 	}

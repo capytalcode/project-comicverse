@@ -5,7 +5,6 @@ import (
 	"errors"
 	"log/slog"
 
-	"forge.capytal.company/capytalcode/project-comicverse/database"
 	"forge.capytal.company/loreddev/x/tinyssert"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 )
