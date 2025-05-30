@@ -6,7 +6,10 @@ require (
 	forge.capytal.company/loreddev/x v0.0.0-20250305165122-0ccb26ab783b
 	github.com/aws/aws-sdk-go-v2 v1.36.3
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.78.1
+	github.com/golang-jwt/jwt/v4 v4.5.2
+	github.com/google/uuid v1.6.0
 	github.com/tursodatabase/go-libsql v0.0.0-20241221181756-6121e81fbf92
+	golang.org/x/crypto v0.38.0
 )
 
 require (
