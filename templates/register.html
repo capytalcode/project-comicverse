@@ -1,0 +1,32 @@
+{{define "register"}} {{template "layout-page-start" (args "Title" "Login")}}
+<main>
+  <div
+    class="w-full h-screen fixed top-0 left-0 flex justify-center items-center"
+  >
+    <form
+      action="/register/"
+      method="post"
+      enctype="multipart/form-data"
+      class="h-fit bg-slate-500 grid grid-cols-1 grid-rows-3 p-5 gap-3"
+      id="login-form"
+    >
+      <h1>Login</h1>
+      <input
+        type="text"
+        name="username"
+        required
+        class="bg-slate-200 p-1"
+        placeholder="Username"
+      />
+      <input
+        type="password"
+        name="password"
+        required
+        class="bg-slate-200 p-1"
+        placeholder="Password"
+      />
+      <button type="submit">Register</button>
+    </form>
+  </div>
+</main>
+{{template "layout-page-end"}} {{end}}
