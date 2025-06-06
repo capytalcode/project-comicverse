@@ -99,7 +99,7 @@ func (r *UserRepository) GetByUsername(username string) (model.User, error) {
 	}
 
 	q := `
-	SELECT FROM users (username, password_hash, created_at, updated_at)
+	SELECT username, password_hash, created_at, updated_at FROM users
 	  WHERE username = :username
 	`
 
