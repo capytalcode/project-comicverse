@@ -55,5 +55,24 @@ func (c userController) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	c.service.Login(user, passwd)
+	// TODO: Move token issuing to it's own service, make UserService.Login just return the user
+	token, _, err := c.service.Login(user, passwd)
+	if errors.Is(err, service.ErrNotFound) {
+		exception.NotFound(exception.WithError(errors.New("user not found"))).ServeHTTP(w, r)
+		return
+	} else if err != nil {
+		exception.InternalServerError(err).ServeHTTP(w, r)
+		return
+	}
+
+	// TODO: harden the cookie policy to the same domain
+	cookie := &http.Cookie{
+		Name:   "token",
+		Value:  token,
+		MaxAge: 0,
+	}
+	http.SetCookie(w, cookie)
+
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
+
