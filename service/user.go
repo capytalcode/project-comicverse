@@ -26,6 +26,8 @@ func NewUserService(repo *repository.UserRepository, assert tinyssert.Assertions
 }
 
 func (s *UserService) Register(username, password string) (model.User, error) {
+	s.assert.NotNil(s.repo)
+
 	if _, err := s.repo.GetByUsername(username); err == nil {
 		return model.User{}, ErrAlreadyExists
 	}
@@ -50,33 +52,43 @@ func (s *UserService) Register(username, password string) (model.User, error) {
 	return u, nil
 }
 
-func (s *UserService) Login(username, password string) (token *jwt.Token, user model.User, err error) {
+func (s *UserService) Login(username, password string) (signedToken string, user model.User, err error) {
+	s.assert.NotNil(s.repo)
+
 	user, err = s.repo.GetByUsername(username)
 	if err != nil {
-		return nil, model.User{}, err
+		return "", model.User{}, errors.Join(errors.New("unable to find user"), err)
 	}
 
 	err = bcrypt.CompareHashAndPassword(user.Password, []byte(password))
 	if err != nil {
-		return nil, model.User{}, err
+		return "", model.User{}, errors.Join(errors.New("unable to compare passwords"), err)
 	}
 
 	t := time.Now()
 	jti, err := uuid.NewV7()
 	if err != nil {
-		return nil, model.User{}, err
+		return "", model.User{}, errors.Join(errors.New("unable to generate token ID"), err)
 	}
 
-	token = jwt.NewWithClaims(jwt.SigningMethodES256, jwt.RegisteredClaims{
+	// TODO: Use ECDSA, so users can verify that their token is signed by the project
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.RegisteredClaims{
+		// TODO: Add IDs to users
 		Issuer:    "comicverse",
 		Subject:   username,
-		IssuedAt:  &jwt.NewNumericDate(t),
-		NotBefore: &jwt.NewNumericDate(t),
+		IssuedAt:  jwt.NewNumericDate(t),
+		NotBefore: jwt.NewNumericDate(t),
 		ID:        jti.String(),
 	})
+	signedToken, err = token.SignedString(jwtKey)
+	if err != nil {
+		return "", user, errors.Join(errors.New("unable to sign token"), err)
+	}
 
-	return token, user, nil
+	return signedToken, user, nil
 }
+
+var jwtKey = []byte("ieurqpieurqpoiweurpewoqueiur") // TODO: move to environment variable
 
 var (
 	ErrAlreadyExists     = errors.New("model already exists")
