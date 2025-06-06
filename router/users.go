@@ -16,6 +16,18 @@ type userController struct {
 	service   *service.UserService
 }
 
+func newUserController(
+	service *service.UserService,
+	templates templates.ITemplate,
+	assert tinyssert.Assertions,
+) userController {
+	return userController{
+		assert:    assert,
+		templates: templates,
+		service:   service,
+	}
+}
+
 func (c userController) login(w http.ResponseWriter, r *http.Request) {
 	c.assert.NotNil(c.templates)
 	c.assert.NotNil(c.service)

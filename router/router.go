@@ -90,10 +90,14 @@ func (router *router) setup() http.Handler {
 	r.Use(exception.PanicMiddleware())
 	r.Use(exception.Middleware())
 
+	userController := newUserController(router.userService, router.templates, router.assert)
+
 	r.Handle("/assets/", http.StripPrefix("/assets/", http.FileServerFS(router.assets)))
 
 	r.HandleFunc("/dashboard/", router.dashboard)
 
+	r.HandleFunc("/login/{$}", userController.login)
+	r.HandleFunc("/register/{$}", userController.register)
 
 	return r
 }
