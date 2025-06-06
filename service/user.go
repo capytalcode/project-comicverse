@@ -17,10 +17,12 @@ type UserService struct {
 	repo   *repository.UserRepository
 }
 
-func NewUserService(repo *repository.UserRepository, assert tinyssert.Assertions) *UserService {
-	assert.NotNil(repo)
+func NewUserService(repo *repository.UserRepository, assert tinyssert.Assertions) (*UserService, error) {
+	if err := assert.NotNil(repo); err != nil {
+		return nil, err
+	}
 
-	return &UserService{repo: repo, assert: assert}
+	return &UserService{repo: repo, assert: assert}, nil
 }
 
 func (s *UserService) Register(username, password string) (model.User, error) {
