@@ -10,8 +10,8 @@ import (
 	"net/http"
 
 	"forge.capytal.company/capytalcode/project-comicverse/assets"
-	"forge.capytal.company/capytalcode/project-comicverse/database"
 	"forge.capytal.company/capytalcode/project-comicverse/internals/joinedfs"
+	"forge.capytal.company/capytalcode/project-comicverse/repository"
 	"forge.capytal.company/capytalcode/project-comicverse/router"
 	"forge.capytal.company/capytalcode/project-comicverse/service"
 	"forge.capytal.company/capytalcode/project-comicverse/templates"
@@ -127,34 +127,18 @@ func (app *app) setup() error {
 	app.assert.NotNil(app.assets)
 	app.assert.NotNil(app.logger)
 
-	var err error
-
-	database, err := database.New(database.Config{
-		SQL:        app.db,
-		Context:    app.ctx,
-		Assertions: app.assert,
-		Logger:     app.logger.WithGroup("database"),
-	})
+	userRepo, err := repository.NewUserRepository(app.db, app.ctx, app.logger, app.assert)
 	if err != nil {
-		return errors.Join(errors.New("unable to create database struct"), err)
+		return err
 	}
 
-	service, err := service.New(service.Config{
-		DB:     database,
-		S3:     app.s3,
-		Bucket: app.bucket,
-
-		Context: app.ctx,
-
-		Assertions: app.assert,
-		Logger:     app.logger.WithGroup("service"),
-	})
+	userService, err := service.NewUserService(userRepo, app.assert)
 	if err != nil {
-		return errors.Join(errors.New("unable to initiate service"), err)
+		return err
 	}
 
 	app.handler, err = router.New(router.Config{
-		Service: service,
+		UserService: userService,
 
 		Templates:    app.templates,
 		DisableCache: app.developmentMode,

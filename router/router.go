@@ -15,7 +15,7 @@ import (
 )
 
 type router struct {
-	service *service.Service
+	userService *service.UserService
 
 	templates templates.ITemplate
 	assets    fs.FS
@@ -26,8 +26,8 @@ type router struct {
 }
 
 func New(cfg Config) (http.Handler, error) {
-	if cfg.Service == nil {
-		return nil, errors.New("service is nil")
+	if cfg.UserService == nil {
+		return nil, errors.New("user service is nil")
 	}
 	if cfg.Templates == nil {
 		return nil, errors.New("templates is nil")
@@ -43,7 +43,7 @@ func New(cfg Config) (http.Handler, error) {
 	}
 
 	r := &router{
-		service: cfg.Service,
+		userService: cfg.UserService,
 
 		templates: cfg.Templates,
 		assets:    cfg.Assets,
@@ -57,7 +57,7 @@ func New(cfg Config) (http.Handler, error) {
 }
 
 type Config struct {
-	Service *service.Service
+	UserService *service.UserService
 
 	Templates    templates.ITemplate
 	Assets       fs.FS
