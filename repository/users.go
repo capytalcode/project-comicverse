@@ -27,6 +27,7 @@ func NewUserRepository(
 	assert tinyssert.Assertions,
 ) (*UserRepository, error) {
 	assert.NotNil(db)
+	assert.NotNil(ctx)
 	assert.NotNil(logger)
 
 	_, err := db.Exec(`CREATE TABLE IF NOT EXISTS users (
@@ -48,6 +49,10 @@ func NewUserRepository(
 }
 
 func (r *UserRepository) Create(u model.User) (model.User, error) {
+	r.assert.NotNil(r.db)
+	r.assert.NotNil(r.log)
+	r.assert.NotNil(r.ctx)
+
 	tx, err := r.db.BeginTx(r.ctx, nil)
 	if err != nil {
 		return model.User{}, err
@@ -84,6 +89,10 @@ func (r *UserRepository) Create(u model.User) (model.User, error) {
 }
 
 func (r *UserRepository) GetByUsername(username string) (model.User, error) {
+	r.assert.NotNil(r.db)
+	r.assert.NotNil(r.log)
+	r.assert.NotNil(r.ctx)
+
 	tx, err := r.db.BeginTx(r.ctx, nil)
 	if err != nil {
 		return model.User{}, err
@@ -133,6 +142,10 @@ func (r *UserRepository) GetByUsername(username string) (model.User, error) {
 }
 
 func (r *UserRepository) Delete(u model.User) error {
+	r.assert.NotNil(r.db)
+	r.assert.NotNil(r.log)
+	r.assert.NotNil(r.ctx)
+
 	tx, err := r.db.BeginTx(r.ctx, nil)
 	if err != nil {
 		return err
