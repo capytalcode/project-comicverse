@@ -76,3 +76,55 @@ func (c userController) login(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
+func (c userController) register(w http.ResponseWriter, r *http.Request) {
+	c.assert.NotNil(c.templates)
+	c.assert.NotNil(c.service)
+
+	if r.Method == http.MethodGet {
+		err := c.templates.ExecuteTemplate(w, "register", nil)
+		if err != nil {
+			exception.InternalServerError(err).ServeHTTP(w, r)
+		}
+		return
+	}
+
+	if r.Method != http.MethodPost {
+		exception.MethodNotAllowed([]string{http.MethodGet, http.MethodPost}).ServeHTTP(w, r)
+		return
+	}
+
+	user, passwd := r.FormValue("username"), r.FormValue("password")
+	if user == "" {
+		exception.BadRequest(errors.New(`missing "username" form value`)).ServeHTTP(w, r)
+		return
+	}
+	if passwd == "" {
+		exception.BadRequest(errors.New(`missing "password" form value`)).ServeHTTP(w, r)
+		return
+	}
+
+	_, err := c.service.Register(user, passwd)
+	if err != nil {
+		exception.InternalServerError(err).ServeHTTP(w, r)
+		return
+	}
+
+	// TODO: Move token issuing to it's own service, make UserService.Login just return the user
+	token, _, err := c.service.Login(user, passwd)
+	if err == service.ErrNotFound {
+		exception.NotFound(exception.WithError(errors.New("user not found"))).ServeHTTP(w, r)
+		return
+	} else if err != nil {
+		exception.InternalServerError(err).ServeHTTP(w, r)
+		return
+	}
+
+	// TODO: harden the cookie policy to the same domain
+	cookie := &http.Cookie{
+		Name:  "token",
+		Value: token,
+	}
+	http.SetCookie(w, cookie)
+
+	http.Redirect(w, r, "/", http.StatusSeeOther)
+}
