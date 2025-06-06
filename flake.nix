@@ -21,6 +21,12 @@
         CGO_ENABLED = "1";
         hardeningDisable = ["all"];
 
+        shellHook = ''
+          set -a
+          source .env
+          set +a
+        '';
+
         buildInputs = with pkgs; [
           # Go tools
           go
