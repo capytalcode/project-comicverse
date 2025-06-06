@@ -5,7 +5,6 @@ import (
 	"io/fs"
 	"log/slog"
 	"net/http"
-	"strings"
 
 	"forge.capytal.company/capytalcode/project-comicverse/service"
 	"forge.capytal.company/capytalcode/project-comicverse/templates"
@@ -95,44 +94,6 @@ func (router *router) setup() http.Handler {
 
 	r.HandleFunc("/dashboard/", router.dashboard)
 
-	r.HandleFunc("/projects/{$}", router.projects)
-	r.HandleFunc("/projects/{ID}/", router.projects)
-	r.HandleFunc("/projects/{ID}/pages/{$}", router.pages)
-	r.HandleFunc("/projects/{ID}/pages/{PageID}", router.pages)
-	r.HandleFunc("/projects/{ID}/pages/{PageID}/interactions/{$}", router.interactions)
-	r.HandleFunc("/projects/{ID}/pages/{PageID}/interactions/{InteractionID}", router.interactions)
 
 	return r
-}
-
-func (router *router) dashboard(w http.ResponseWriter, r *http.Request) {
-	router.assert.NotNil(router.templates)
-	router.assert.NotNil(router.service)
-	router.assert.NotNil(w)
-	router.assert.NotNil(r)
-
-	p, err := router.service.ListProjects()
-	if err != nil {
-		exception.InternalServerError(err).ServeHTTP(w, r)
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-	err = router.templates.ExecuteTemplate(w, "dashboard", p)
-	if err != nil {
-		exception.InternalServerError(err).ServeHTTP(w, r)
-	}
-}
-
-func getMethod(r *http.Request) string {
-	if r.Method == http.MethodGet || r.Method == http.MethodHead {
-		return r.Method
-	}
-
-	m := r.FormValue("x-method")
-	if m == "" {
-		return r.Method
-	}
-
-	return strings.ToUpper(m)
 }
