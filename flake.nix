@@ -19,7 +19,7 @@
     devShells = forAllSystems (system: pkgs: {
       default = pkgs.mkShell {
         CGO_ENABLED = "1";
-        hardeningDisable = ["all"];
+        hardeningDisable = ["fortify"];
 
         shellHook = ''
           set -a
