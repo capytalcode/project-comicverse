@@ -33,7 +33,7 @@ func NewUserRepository(
 		username      TEXT NOT NULL PRIMARY KEY,
 		password_hash TEXT NOT NULL,
 		created_at    TEXT NOT NULL,
-		updated_at    TEXT NOT NULL,
+		updated_at    TEXT NOT NULL
 	)`)
 	if err != nil {
 		return nil, err
