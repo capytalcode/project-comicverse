@@ -47,7 +47,7 @@ func (c userController) login(w http.ResponseWriter, r *http.Request) {
 
 	user, passwd := r.FormValue("username"), r.FormValue("password")
 	if user == "" {
-		exception.BadRequest(errors.New(`missing "user" form value`)).ServeHTTP(w, r)
+		exception.BadRequest(errors.New(`missing "username" form value`)).ServeHTTP(w, r)
 		return
 	}
 	if passwd == "" {
