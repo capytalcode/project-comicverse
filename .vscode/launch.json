@@ -14,13 +14,7 @@
       "request": "launch",
       "mode": "debug",
       "program": "${workspaceFolder}/cmd/cmd.go",
-      "args": [
-        "-dev",
-        "-port",
-        "8080",
-        "-hostname",
-        "0.0.0.0"
-      ]
+      "args": ["-dev", "-port", "8080", "-hostname", "0.0.0.0"]
     }
   ]
 }
