@@ -41,6 +41,7 @@ func NewUserRepository(
 
 	return &UserRepository{
 		db:     db,
+		ctx:    ctx,
 		log:    logger,
 		assert: assert,
 	}, nil
