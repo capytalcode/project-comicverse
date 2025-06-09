@@ -3,3 +3,4 @@ out.css
 .tmp
 .env
 *.db
+tmp
