@@ -67,9 +67,10 @@ func (c userController) login(w http.ResponseWriter, r *http.Request) {
 
 	// TODO: harden the cookie policy to the same domain
 	cookie := &http.Cookie{
-		Name:   "token",
-		Value:  token,
-		MaxAge: 0,
+		Path:     "/",
+		HttpOnly: true,
+		Name:     "token",
+		Value:    token,
 	}
 	http.SetCookie(w, cookie)
 
@@ -121,8 +122,10 @@ func (c userController) register(w http.ResponseWriter, r *http.Request) {
 
 	// TODO: harden the cookie policy to the same domain
 	cookie := &http.Cookie{
-		Name:  "token",
-		Value: token,
+		Path:     "/",
+		HttpOnly: true,
+		Name:     "token",
+		Value:    token,
 	}
 	http.SetCookie(w, cookie)
 
