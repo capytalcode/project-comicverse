@@ -1,0 +1,20 @@
+{{define "landing"}} {{template "layout-page-start" (args "Title"
+"ComicVerse")}}
+<main class="h-full w-full justify-center px-5 py-10 align-middle">
+  <div
+    class="fixed flex flex-col gap-5 h-screen w-full items-center justify-center top-0 left-0"
+  >
+    <h1 class="text-3xl font-bold">Welcome back</h1>
+    <a
+      href="/login/"
+      hx-get="/login/"
+      hx-swap="outerHTML"
+      hx-select="#login-form"
+    >
+      <button class="rounded-full bg-slate-700 p-2 px-5 text-slate-100">
+        Login
+      </button>
+    </a>
+  </div>
+</main>
+{{template "layout-page-end"}} {{end}}
