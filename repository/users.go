@@ -73,8 +73,8 @@ func (r *UserRepository) Create(u model.User) (model.User, error) {
 	_, err = tx.ExecContext(r.ctx, q,
 		sql.Named("username", u.Username),
 		sql.Named("password_hash", passwd),
-		sql.Named("created_at", t.Format(repositoryDateFormat)),
-		sql.Named("updated_at", t.Format(repositoryDateFormat)))
+		sql.Named("created_at", t.Format(dateFormat)),
+		sql.Named("updated_at", t.Format(dateFormat)))
 	if err != nil {
 		log.ErrorContext(r.ctx, "Failed to create user", slog.String("error", err.Error()))
 		return model.User{}, nil
@@ -123,12 +123,12 @@ func (r *UserRepository) GetByUsername(username string) (model.User, error) {
 		return model.User{}, err
 	}
 
-	c, err := time.Parse(repositoryDateFormat, dateCreated)
+	c, err := time.Parse(dateFormat, dateCreated)
 	if err != nil {
 		return model.User{}, errors.Join(ErrInvalidData, err)
 	}
 
-	u, err := time.Parse(repositoryDateFormat, dateUpdated)
+	u, err := time.Parse(dateFormat, dateUpdated)
 	if err != nil {
 		return model.User{}, errors.Join(ErrInvalidData, err)
 	}
