@@ -77,7 +77,7 @@ func (r *UserRepository) Create(u model.User) (model.User, error) {
 		sql.Named("updated_at", t.Format(dateFormat)))
 	if err != nil {
 		log.ErrorContext(r.ctx, "Failed to create user", slog.String("error", err.Error()))
-		return model.User{}, nil
+		return model.User{}, err
 	}
 
 	if err := tx.Commit(); err != nil {
