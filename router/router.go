@@ -94,7 +94,22 @@ func (router *router) setup() http.Handler {
 
 	r.Handle("/assets/", http.StripPrefix("/assets/", http.FileServerFS(router.assets)))
 
-	r.HandleFunc("/dashboard/", router.dashboard)
+	r.HandleFunc("/{$}", func(w http.ResponseWriter, r *http.Request) {
+		// TODO: Add a way to the user to bypass this check and see the landing page.
+		//       Probably a query parameter to bypass like "?landing=true"
+		if userController.isLogged(r) {
+			err := router.templates.ExecuteTemplate(w, "dashboard", nil)
+			if err != nil {
+				exception.InternalServerError(err).ServeHTTP(w, r)
+			}
+			return
+		}
+
+		err := router.templates.ExecuteTemplate(w, "landing", nil)
+		if err != nil {
+			exception.InternalServerError(err).ServeHTTP(w, r)
+		}
+	})
 
 	r.HandleFunc("/login/{$}", userController.login)
 	r.HandleFunc("/register/{$}", userController.register)

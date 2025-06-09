@@ -128,3 +128,9 @@ func (c userController) register(w http.ResponseWriter, r *http.Request) {
 
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
+
+func (ctrl userController) isLogged(r *http.Request) bool {
+	// TODO: Check if token in valid (depends on token service being implemented)
+	cs := r.CookiesNamed("token")
+	return len(cs) > 0
+}
