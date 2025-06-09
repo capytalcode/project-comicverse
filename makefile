@@ -27,6 +27,16 @@ dev/assets:
 dev:
 	$(MAKE) -j2 dev/assets dev/server
 
+dev/debug:
+	$(MAKE) -j2 debug dev/assets
+
+debug:
+	dlv debug -l 127.0.0.1:38697 \
+		--continue \
+		--accept-multiclient \
+		--headless \
+		./cmd -- -dev -port $(PORT) -hostname 0.0.0.0
+
 build/assets:
 	tailwindcss \
 		-i ./assets/stylesheets/tailwind.css \
