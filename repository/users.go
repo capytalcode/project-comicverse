@@ -171,10 +171,3 @@ func (r *UserRepository) Delete(u model.User) error {
 
 	return nil
 }
-
-var (
-	ErrNotFound    = sql.ErrNoRows
-	ErrInvalidData = errors.New("model was saved with invalid data")
-
-	repositoryDateFormat = time.RFC3339
-)
