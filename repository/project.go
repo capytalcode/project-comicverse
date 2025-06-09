@@ -122,3 +122,33 @@ func (repo ProjectRepository) Update(p model.Project) error {
 	return nil
 }
 
+func (repo ProjectRepository) Delete(p model.Project) error {
+	repo.assert.NotNil(repo.db)
+	repo.assert.NotNil(repo.ctx)
+	repo.assert.NotNil(repo.ctx)
+
+	tx, err := repo.db.BeginTx(repo.ctx, nil)
+	if err != nil {
+		return err
+	}
+
+	q := `
+	DELETE FROM projects WHERE uuid = :uuid
+	`
+
+	log := repo.log.With(slog.String("uuid", p.UUID.String()), slog.String("query", q))
+	log.DebugContext(repo.ctx, "Deleting project")
+
+	_, err = tx.ExecContext(repo.ctx, q, sql.Named("uuid", p.UUID))
+	if err != nil {
+		log.ErrorContext(repo.ctx, "Failed to delete project", slog.String("error", err.Error()))
+		return errors.Join(ErrExecuteQuery, err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		log.ErrorContext(repo.ctx, "Failed to commit transaction", slog.String("error", err.Error()))
+		return errors.Join(ErrCommitQuery, err)
+	}
+
+	return nil
+}
