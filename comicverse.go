@@ -30,7 +30,7 @@ func New(cfg Config, opts ...Option) (http.Handler, error) {
 		developmentMode: false,
 		ctx:             context.Background(),
 
-		assert: tinyssert.NewAssertions(),
+		assert: tinyssert.New(),
 		logger: slog.New(slog.NewTextHandler(io.Discard, &slog.HandlerOptions{Level: slog.LevelError})),
 	}
 
