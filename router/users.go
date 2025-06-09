@@ -77,12 +77,12 @@ func (c userController) login(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
-func (c userController) register(w http.ResponseWriter, r *http.Request) {
-	c.assert.NotNil(c.templates)
-	c.assert.NotNil(c.service)
+func (ctrl userController) register(w http.ResponseWriter, r *http.Request) {
+	ctrl.assert.NotNil(ctrl.templates)
+	ctrl.assert.NotNil(ctrl.service)
 
 	if r.Method == http.MethodGet {
-		err := c.templates.ExecuteTemplate(w, "register", nil)
+		err := ctrl.templates.ExecuteTemplate(w, "register", nil)
 		if err != nil {
 			exception.InternalServerError(err).ServeHTTP(w, r)
 		}
@@ -104,14 +104,14 @@ func (c userController) register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err := c.service.Register(user, passwd)
+	_, err := ctrl.service.Register(user, passwd)
 	if err != nil {
 		exception.InternalServerError(err).ServeHTTP(w, r)
 		return
 	}
 
 	// TODO: Move token issuing to it's own service, make UserService.Login just return the user
-	token, _, err := c.service.Login(user, passwd)
+	token, _, err := ctrl.service.Login(user, passwd)
 	if err == service.ErrNotFound {
 		exception.NotFound(exception.WithError(errors.New("user not found"))).ServeHTTP(w, r)
 		return
