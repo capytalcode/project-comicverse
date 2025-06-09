@@ -81,3 +81,44 @@ func (repo ProjectRepository) Create(p model.Project) error {
 	return nil
 }
 
+func (repo ProjectRepository) Update(p model.Project) error {
+	repo.assert.NotNil(repo.db)
+	repo.assert.NotNil(repo.ctx)
+	repo.assert.NotNil(repo.ctx)
+
+	if err := p.Validate(); err != nil {
+		return errors.Join(ErrInvalidData, err)
+	}
+
+	tx, err := repo.db.BeginTx(repo.ctx, nil)
+	if err != nil {
+		return errors.Join(ErrDatabaseConn, err)
+	}
+
+	q := `
+	UPDATE projects 
+	SET title = :title
+	    updated_at = :updated_at
+	WHERE uuid = :uuid
+	`
+
+	log := repo.log.With(slog.String("uuid", p.UUID.String()), slog.String("query", q))
+	log.DebugContext(repo.ctx, "Updating project")
+
+	_, err = tx.ExecContext(repo.ctx, q,
+		sql.Named("title", p.Title),
+		sql.Named("updated_at", p.DateUpdated.Format(dateFormat)),
+	)
+	if err != nil {
+		log.ErrorContext(repo.ctx, "Failed to insert project", slog.String("error", err.Error()))
+		return errors.Join(ErrExecuteQuery, err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		log.ErrorContext(repo.ctx, "Failed to commit transaction", slog.String("error", err.Error()))
+		return errors.Join(ErrCommitQuery, err)
+	}
+
+	return nil
+}
+
