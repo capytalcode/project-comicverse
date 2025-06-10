@@ -8,6 +8,7 @@ import (
 
 	"forge.capytal.company/capytalcode/project-comicverse/model"
 	"forge.capytal.company/loreddev/x/tinyssert"
+	"github.com/google/uuid"
 )
 
 type Project struct {
@@ -122,7 +123,7 @@ func (repo Project) Update(p model.Project) error {
 	return nil
 }
 
-func (repo Project) Delete(p model.Project) error {
+func (repo Project) DeleteByID(id uuid.UUID) error {
 	repo.assert.NotNil(repo.db)
 	repo.assert.NotNil(repo.ctx)
 	repo.assert.NotNil(repo.ctx)
@@ -133,13 +134,13 @@ func (repo Project) Delete(p model.Project) error {
 	}
 
 	q := `
-	DELETE FROM projects WHERE uuid = :uuid
+	DELETE FROM projects WHERE id = :id
 	`
 
-	log := repo.log.With(slog.String("uuid", p.UUID.String()), slog.String("query", q))
+	log := repo.log.With(slog.String("id", id.String()), slog.String("query", q))
 	log.DebugContext(repo.ctx, "Deleting project")
 
-	_, err = tx.ExecContext(repo.ctx, q, sql.Named("uuid", p.UUID))
+	_, err = tx.ExecContext(repo.ctx, q, sql.Named("id", id))
 	if err != nil {
 		log.ErrorContext(repo.ctx, "Failed to delete project", slog.String("error", err.Error()))
 		return errors.Join(ErrExecuteQuery, err)
