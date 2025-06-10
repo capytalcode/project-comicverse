@@ -35,11 +35,19 @@ func (svc *User) Register(username, password string) (model.User, error) {
 		return model.User{}, errors.Join(errors.New("service: unable to generate password hash"))
 	}
 
+	id, err := uuid.NewV7()
+	if err != nil {
+		return model.User{}, errors.Join(errors.New("service: unable to create user id"), err)
+	}
+
+	now := time.Now()
+
 	u := model.User{
+		ID:          id,
 		Username:    username,
 		Password:    hash,
-		DateCreated: time.Now(),
-		DateUpdated: time.Now(),
+		DateCreated: now,
+		DateUpdated: now,
 	}
 
 	u, err = svc.repo.Create(u)
