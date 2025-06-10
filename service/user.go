@@ -12,23 +12,22 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-type UserService struct {
+type User struct {
 	assert tinyssert.Assertions
 	repo   *repository.UserRepository
 }
 
-func NewUserService(repo *repository.UserRepository, assert tinyssert.Assertions) (*UserService, error) {
-	if err := assert.NotNil(repo); err != nil {
-		return nil, err
-	}
+func NewUser(repo *repository.User, logger *slog.Logger, assert tinyssert.Assertions) *User {
+	assert.NotNil(repo)
+	assert.NotNil(logger)
 
-	return &UserService{repo: repo, assert: assert}, nil
+	return &User{repo: repo, assert: assert}
 }
 
-func (s *UserService) Register(username, password string) (model.User, error) {
-	s.assert.NotNil(s.repo)
+func (svc *User) Register(username, password string) (model.User, error) {
+	svc.assert.NotNil(svc.repo)
 
-	if _, err := s.repo.GetByUsername(username); err == nil {
+	if _, err := svc.repo.GetByUsername(username); err == nil {
 		return model.User{}, ErrAlreadyExists
 	}
 
@@ -44,7 +43,7 @@ func (s *UserService) Register(username, password string) (model.User, error) {
 		DateUpdated: time.Now(),
 	}
 
-	u, err = s.repo.Create(u)
+	u, err = svc.repo.Create(u)
 	if err != nil {
 		return model.User{}, errors.Join(errors.New("failed to create user model"), err)
 	}
@@ -52,20 +51,16 @@ func (s *UserService) Register(username, password string) (model.User, error) {
 	return u, nil
 }
 
-func (s *UserService) Login(username, password string) (signedToken string, user model.User, err error) {
-	s.assert.NotNil(s.repo)
+func (svc *User) Login(username, password string) (user model.User, err error) {
+	svc.assert.NotNil(svc.repo)
 
-	user, err = s.repo.GetByUsername(username)
+	user, err = svc.repo.GetByUsername(username)
 	if err != nil {
-		return "", model.User{}, errors.Join(errors.New("unable to find user"), err)
+		return model.User{}, errors.Join(errors.New("service: unable to find user"), err)
 	}
 
 	err = bcrypt.CompareHashAndPassword(user.Password, []byte(password))
 	if err != nil {
-		return "", model.User{}, errors.Join(errors.New("unable to compare passwords"), err)
-	}
-
-		return "", user, errors.Join(errors.New("unable to sign token"), err)
 		return model.User{}, errors.Join(errors.New("service: unable to compare passwords"), err)
 	}
 
