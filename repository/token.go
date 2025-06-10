@@ -123,3 +123,77 @@ func (repo Token) Get(tokenID, userID uuid.UUID) (model.Token, error) {
 	return token, nil
 }
 
+func (repo Token) GetByUserID(userID uuid.UUID) ([]model.Token, error) {
+	repo.assert.NotNil(repo.db)
+	repo.assert.NotNil(repo.ctx)
+	repo.assert.NotNil(repo.log)
+
+	q := `
+	SELECT (id, user_id, created_at, expired_at) FROM tokens
+	WHERE user_id = :user_id
+	`
+
+	log := repo.log.With(
+		slog.String("user_id", userID.String()),
+		slog.String("query", q),
+	)
+	log.DebugContext(repo.ctx, "Getting users tokens")
+
+	rows, err := repo.db.QueryContext(repo.ctx, q,
+		sql.Named("user_id", userID),
+	)
+	if err != nil {
+		log.ErrorContext(repo.ctx, "Failed to get user tokens", slog.String("error", err.Error()))
+		return []model.Token{}, errors.Join(ErrExecuteQuery, err)
+	}
+
+	tokens := []model.Token{}
+	for rows.Next() {
+		t, err := repo.scan(rows)
+		if err != nil {
+			log.ErrorContext(repo.ctx, "Failed to scan token", slog.String("error", err.Error()))
+			return []model.Token{}, err
+		}
+
+		tokens = append(tokens, t)
+	}
+
+	if err := rows.Err(); err != nil {
+		log.ErrorContext(repo.ctx, "Failed to scan token rows", slog.String("error", err.Error()))
+		return []model.Token{}, errors.Join(ErrExecuteQuery, err)
+	}
+
+	return tokens, nil
+}
+
+func (repo Token) scan(row scan) (model.Token, error) {
+	repo.assert.NotNil(repo.ctx)
+
+	var token model.Token
+	var createdStr, expiresStr string
+
+	err := row.Scan(&token.ID, &token.UserID, &createdStr, &expiresStr)
+	if err != nil {
+		return model.Token{}, errors.Join(ErrExecuteQuery, err)
+	}
+
+	dateCreated, err := time.Parse(dateFormat, createdStr)
+	if err != nil {
+		return model.Token{}, errors.Join(ErrInvalidOutput, err)
+	}
+
+	dateExpires, err := time.Parse(dateFormat, createdStr)
+	if err != nil {
+		return model.Token{}, errors.Join(ErrInvalidOutput, err)
+	}
+
+	token.DateCreated = dateCreated
+	token.DateExpires = dateExpires
+
+	if err := token.Validate(); err != nil {
+		return model.Token{}, errors.Join(ErrInvalidOutput, err)
+	}
+
+	return token, nil
+}
+
