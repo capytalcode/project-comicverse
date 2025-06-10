@@ -13,16 +13,16 @@ import (
 	"github.com/google/uuid"
 )
 
-type UserRepository struct {
+type User struct {
 	baseRepostiory
 }
 
-func NewUserRepository(
+func NewUser(
 	ctx context.Context,
 	db *sql.DB,
 	logger *slog.Logger,
 	assert tinyssert.Assertions,
-) (*UserRepository, error) {
+) (*User, error) {
 	assert.NotNil(ctx)
 	assert.NotNil(db)
 	assert.NotNil(logger)
@@ -40,12 +40,12 @@ func NewUserRepository(
 
 	b := newBaseRepostiory(ctx, db, logger, assert)
 
-	return &UserRepository{
+	return &User{
 		baseRepostiory: b,
 	}, nil
 }
 
-func (repo *UserRepository) Create(u model.User) (model.User, error) {
+func (repo *User) Create(u model.User) (model.User, error) {
 	repo.assert.NotNil(repo.db)
 	repo.assert.NotNil(repo.log)
 	repo.assert.NotNil(repo.ctx)
@@ -93,7 +93,7 @@ func (repo *UserRepository) Create(u model.User) (model.User, error) {
 	return u, nil
 }
 
-func (repo *UserRepository) GetByID(id uuid.UUID) (model.User, error) {
+func (repo *User) GetByID(id uuid.UUID) (model.User, error) {
 	repo.assert.NotNil(repo.db)
 	repo.assert.NotNil(repo.log)
 	repo.assert.NotNil(repo.ctx)
@@ -119,7 +119,7 @@ func (repo *UserRepository) GetByID(id uuid.UUID) (model.User, error) {
 	return user, nil
 }
 
-func (repo *UserRepository) GetByUsername(username string) (model.User, error) {
+func (repo *User) GetByUsername(username string) (model.User, error) {
 	repo.assert.NotNil(repo.db)
 	repo.assert.NotNil(repo.log)
 	repo.assert.NotNil(repo.ctx)
@@ -145,7 +145,7 @@ func (repo *UserRepository) GetByUsername(username string) (model.User, error) {
 	return user, nil
 }
 
-func (repo *UserRepository) scan(row scan) (model.User, error) {
+func (repo *User) scan(row scan) (model.User, error) {
 	var user model.User
 	var password_hashStr, createdStr, updatedStr string
 	err := row.Scan(&user.ID, &user.Username, &password_hashStr, &createdStr, &updatedStr)
@@ -179,7 +179,7 @@ func (repo *UserRepository) scan(row scan) (model.User, error) {
 	return user, nil
 }
 
-func (repo *UserRepository) Delete(u model.User) error {
+func (repo *User) Delete(u model.User) error {
 	repo.assert.NotNil(repo.db)
 	repo.assert.NotNil(repo.log)
 	repo.assert.NotNil(repo.ctx)
