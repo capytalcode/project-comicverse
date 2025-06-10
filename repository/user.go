@@ -27,7 +27,8 @@ func NewUserRepository(
 	assert.NotNil(logger)
 
 	_, err := db.Exec(`CREATE TABLE IF NOT EXISTS users (
-		username      TEXT NOT NULL PRIMARY KEY,
+		id            TEXT NOT NULL PRIMARY KEY,
+		username      TEXT NOT NULL UNIQUE,
 		password_hash TEXT NOT NULL,
 		created_at    TEXT NOT NULL,
 		updated_at    TEXT NOT NULL
@@ -54,11 +55,14 @@ func (repo *UserRepository) Create(u model.User) (model.User, error) {
 	}
 
 	q := `
-	INSERT INTO users (username, password_hash, created_at, updated_at)
-	  VALUES (:username, :password_hash, :created_at, :updated_at)
+	INSERT INTO users (id, username, password_hash, created_at, updated_at)
+	VALUES (:id, :username, :password_hash, :created_at, :updated_at)
 	`
 
-	log := repo.log.With(slog.String("username", u.Username), slog.String("query", q))
+	log := repo.log.With(
+		slog.String("id", u.ID.String()),
+		slog.String("username", u.Username),
+		slog.String("query", q))
 	log.DebugContext(repo.ctx, "Inserting new user")
 
 	t := time.Now()
@@ -66,6 +70,7 @@ func (repo *UserRepository) Create(u model.User) (model.User, error) {
 	passwd := base64.URLEncoding.EncodeToString(u.Password)
 
 	_, err = tx.ExecContext(repo.ctx, q,
+		sql.Named("id", u.ID),
 		sql.Named("username", u.Username),
 		sql.Named("password_hash", passwd),
 		sql.Named("created_at", t.Format(dateFormat)),
@@ -89,32 +94,35 @@ func (repo *UserRepository) GetByUsername(username string) (model.User, error) {
 	repo.assert.NotNil(repo.ctx)
 
 	q := `
-	SELECT username, password_hash, created_at, updated_at FROM users
+	SELECT id, username, password_hash, created_at, updated_at FROM users
 	  WHERE username = :username
 	`
 
-	log := repo.log.With(slog.String("username", username), slog.String("query", q))
+	log := repo.log.With(
+		slog.String("username", username),
+		slog.String("query", q))
 	log.DebugContext(repo.ctx, "Querying user")
 
 	row := repo.db.QueryRowContext(repo.ctx, q, sql.Named("username", username))
 
-	var password_hash, dateCreated, dateUpdated string
-	err := row.Scan(&username, &password_hash, &dateCreated, &dateUpdated)
+	var user model.User
+	var password_hashStr, createdStr, updatedStr string
+	err := row.Scan(&user.ID, &user.Username, &password_hashStr, &createdStr, &updatedStr)
 	if err != nil {
 		return model.User{}, errors.Join(ErrExecuteQuery, err)
 	}
 
-	passwd, err := base64.URLEncoding.DecodeString(password_hash)
+	passwd, err := base64.URLEncoding.DecodeString(password_hashStr)
 	if err != nil {
 		return model.User{}, errors.Join(ErrInvalidOutput, err)
 	}
 
-	c, err := time.Parse(dateFormat, dateCreated)
+	c, err := time.Parse(dateFormat, createdStr)
 	if err != nil {
 		return model.User{}, errors.Join(ErrInvalidOutput, err)
 	}
 
-	u, err := time.Parse(dateFormat, dateUpdated)
+	u, err := time.Parse(dateFormat, updatedStr)
 	if err != nil {
 		return model.User{}, errors.Join(ErrInvalidOutput, err)
 	}
@@ -138,13 +146,13 @@ func (repo *UserRepository) Delete(u model.User) error {
 	}
 
 	q := `
-	DELETE FROM users WHERE username = :username
+	DELETE FROM users WHERE id = :id
 	`
 
-	log := repo.log.With(slog.String("username", u.Username), slog.String("query", q))
+	log := repo.log.With(slog.String("id", u.ID.String()), slog.String("query", q))
 	log.DebugContext(repo.ctx, "Deleting user")
 
-	_, err = tx.ExecContext(repo.ctx, q, sql.Named("username", u.Username))
+	_, err = tx.ExecContext(repo.ctx, q, sql.Named("id", u.ID))
 	if err != nil {
 		log.ErrorContext(repo.ctx, "Failed to delete user", slog.String("error", err.Error()))
 		return errors.Join(ErrExecuteQuery, err)
