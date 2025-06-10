@@ -3,8 +3,13 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"log/slog"
+	"time"
+
+	"forge.capytal.company/capytalcode/project-comicverse/model"
 	"forge.capytal.company/loreddev/x/tinyssert"
+	"github.com/google/uuid"
 )
 
 type Token struct {
@@ -86,5 +91,35 @@ func (repo Token) Create(token model.Token) error {
 	}
 
 	return nil
+}
+
+func (repo Token) Get(tokenID, userID uuid.UUID) (model.Token, error) {
+	repo.assert.NotNil(repo.db)
+	repo.assert.NotNil(repo.ctx)
+	repo.assert.NotNil(repo.log)
+
+	q := `
+	SELECT (id, user_id, created_at, expired_at) FROM tokens
+	WHERE id      = :id
+	  AND user_id = :user_id
+	`
+
+	log := repo.log.With(slog.String("id", tokenID.String()),
+		slog.String("user_id", userID.String()),
+		slog.String("query", q))
+	log.DebugContext(repo.ctx, "Getting token")
+
+	row := repo.db.QueryRowContext(repo.ctx, q,
+		sql.Named("id", tokenID),
+		sql.Named("user_id", userID),
+	)
+
+	token, err := repo.scan(row)
+	if err != nil {
+		log.ErrorContext(repo.ctx, "Failed to scan token", slog.String("error", err.Error()))
+		return model.Token{}, err
+	}
+
+	return token, nil
 }
 
