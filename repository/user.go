@@ -96,16 +96,12 @@ func (repo *UserRepository) GetByUsername(username string) (model.User, error) {
 	log := repo.log.With(slog.String("username", username), slog.String("query", q))
 	log.DebugContext(repo.ctx, "Querying user")
 
-	row := tx.QueryRowContext(r.ctx, q, sql.Named("username", username))
+	row := repo.db.QueryRowContext(repo.ctx, q, sql.Named("username", username))
 
 	var password_hash, dateCreated, dateUpdated string
-	if err = row.Scan(&username, &password_hash, &dateCreated, &dateUpdated); err != nil {
-		return model.User{}, err
-	}
-
-	if err := tx.Commit(); err != nil {
-		log.ErrorContext(r.ctx, "Failed to commit transaction", slog.String("error", err.Error()))
-		return model.User{}, err
+	err := row.Scan(&username, &password_hash, &dateCreated, &dateUpdated)
+	if err != nil {
+		return model.User{}, errors.Join(ErrExecuteQuery, err)
 	}
 
 	passwd, err := base64.URLEncoding.DecodeString(password_hash)
