@@ -50,7 +50,7 @@ func (repo *UserRepository) Create(u model.User) (model.User, error) {
 
 	tx, err := repo.db.BeginTx(repo.ctx, nil)
 	if err != nil {
-		return model.User{}, err
+		return model.User{}, errors.Join(ErrDatabaseConn, err)
 	}
 
 	q := `
@@ -71,13 +71,13 @@ func (repo *UserRepository) Create(u model.User) (model.User, error) {
 		sql.Named("created_at", t.Format(dateFormat)),
 		sql.Named("updated_at", t.Format(dateFormat)))
 	if err != nil {
-		log.ErrorContext(r.ctx, "Failed to create user", slog.String("error", err.Error()))
-		return model.User{}, err
+		log.ErrorContext(repo.ctx, "Failed to create user", slog.String("error", err.Error()))
+		return model.User{}, errors.Join(ErrExecuteQuery, err)
 	}
 
 	if err := tx.Commit(); err != nil {
-		log.ErrorContext(r.ctx, "Failed to commit transaction", slog.String("error", err.Error()))
-		return model.User{}, err
+		log.ErrorContext(repo.ctx, "Failed to commit transaction", slog.String("error", err.Error()))
+		return model.User{}, errors.Join(ErrCommitQuery, err)
 	}
 
 	return u, nil
@@ -110,17 +110,17 @@ func (repo *UserRepository) GetByUsername(username string) (model.User, error) {
 
 	passwd, err := base64.URLEncoding.DecodeString(password_hash)
 	if err != nil {
-		return model.User{}, err
+		return model.User{}, errors.Join(ErrInvalidOutput, err)
 	}
 
 	c, err := time.Parse(dateFormat, dateCreated)
 	if err != nil {
-		return model.User{}, errors.Join(ErrInvalidData, err)
+		return model.User{}, errors.Join(ErrInvalidOutput, err)
 	}
 
 	u, err := time.Parse(dateFormat, dateUpdated)
 	if err != nil {
-		return model.User{}, errors.Join(ErrInvalidData, err)
+		return model.User{}, errors.Join(ErrInvalidOutput, err)
 	}
 
 	return model.User{
@@ -148,15 +148,15 @@ func (repo *UserRepository) Delete(u model.User) error {
 	log := repo.log.With(slog.String("username", u.Username), slog.String("query", q))
 	log.DebugContext(repo.ctx, "Deleting user")
 
-	_, err = tx.ExecContext(r.ctx, q, sql.Named("username", u.Username))
+	_, err = tx.ExecContext(repo.ctx, q, sql.Named("username", u.Username))
 	if err != nil {
-		log.ErrorContext(r.ctx, "Failed to delete user", slog.String("error", err.Error()))
-		return err
+		log.ErrorContext(repo.ctx, "Failed to delete user", slog.String("error", err.Error()))
+		return errors.Join(ErrExecuteQuery, err)
 	}
 
 	if err := tx.Commit(); err != nil {
-		log.ErrorContext(r.ctx, "Failed to commit transaction", slog.String("error", err.Error()))
-		return err
+		log.ErrorContext(repo.ctx, "Failed to commit transaction", slog.String("error", err.Error()))
+		return errors.Join(ErrCommitQuery, err)
 	}
 
 	return nil
