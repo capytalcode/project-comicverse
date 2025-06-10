@@ -33,7 +33,7 @@ func (svc *User) Register(username, password string) (model.User, error) {
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
-		return model.User{}, err
+		return model.User{}, errors.Join(errors.New("service: unable to generate password hash"))
 	}
 
 	u := model.User{
@@ -45,7 +45,7 @@ func (svc *User) Register(username, password string) (model.User, error) {
 
 	u, err = svc.repo.Create(u)
 	if err != nil {
-		return model.User{}, errors.Join(errors.New("failed to create user model"), err)
+		return model.User{}, errors.Join(errors.New("service: failed to create user model"), err)
 	}
 
 	return u, nil
