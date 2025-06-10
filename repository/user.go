@@ -43,12 +43,12 @@ func NewUserRepository(
 	}, nil
 }
 
-func (r *UserRepository) Create(u model.User) (model.User, error) {
-	r.assert.NotNil(r.db)
-	r.assert.NotNil(r.log)
-	r.assert.NotNil(r.ctx)
+func (repo *UserRepository) Create(u model.User) (model.User, error) {
+	repo.assert.NotNil(repo.db)
+	repo.assert.NotNil(repo.log)
+	repo.assert.NotNil(repo.ctx)
 
-	tx, err := r.db.BeginTx(r.ctx, nil)
+	tx, err := repo.db.BeginTx(repo.ctx, nil)
 	if err != nil {
 		return model.User{}, err
 	}
@@ -58,14 +58,14 @@ func (r *UserRepository) Create(u model.User) (model.User, error) {
 	  VALUES (:username, :password_hash, :created_at, :updated_at)
 	`
 
-	log := r.log.With(slog.String("username", u.Username), slog.String("query", q))
-	log.DebugContext(r.ctx, "Inserting new user")
+	log := repo.log.With(slog.String("username", u.Username), slog.String("query", q))
+	log.DebugContext(repo.ctx, "Inserting new user")
 
 	t := time.Now()
 
 	passwd := base64.URLEncoding.EncodeToString(u.Password)
 
-	_, err = tx.ExecContext(r.ctx, q,
+	_, err = tx.ExecContext(repo.ctx, q,
 		sql.Named("username", u.Username),
 		sql.Named("password_hash", passwd),
 		sql.Named("created_at", t.Format(dateFormat)),
@@ -83,23 +83,18 @@ func (r *UserRepository) Create(u model.User) (model.User, error) {
 	return u, nil
 }
 
-func (r *UserRepository) GetByUsername(username string) (model.User, error) {
-	r.assert.NotNil(r.db)
-	r.assert.NotNil(r.log)
-	r.assert.NotNil(r.ctx)
-
-	tx, err := r.db.BeginTx(r.ctx, nil)
-	if err != nil {
-		return model.User{}, err
-	}
+func (repo *UserRepository) GetByUsername(username string) (model.User, error) {
+	repo.assert.NotNil(repo.db)
+	repo.assert.NotNil(repo.log)
+	repo.assert.NotNil(repo.ctx)
 
 	q := `
 	SELECT username, password_hash, created_at, updated_at FROM users
 	  WHERE username = :username
 	`
 
-	log := r.log.With(slog.String("username", username), slog.String("query", q))
-	log.DebugContext(r.ctx, "Querying user")
+	log := repo.log.With(slog.String("username", username), slog.String("query", q))
+	log.DebugContext(repo.ctx, "Querying user")
 
 	row := tx.QueryRowContext(r.ctx, q, sql.Named("username", username))
 
@@ -136,12 +131,12 @@ func (r *UserRepository) GetByUsername(username string) (model.User, error) {
 	}, nil
 }
 
-func (r *UserRepository) Delete(u model.User) error {
-	r.assert.NotNil(r.db)
-	r.assert.NotNil(r.log)
-	r.assert.NotNil(r.ctx)
+func (repo *UserRepository) Delete(u model.User) error {
+	repo.assert.NotNil(repo.db)
+	repo.assert.NotNil(repo.log)
+	repo.assert.NotNil(repo.ctx)
 
-	tx, err := r.db.BeginTx(r.ctx, nil)
+	tx, err := repo.db.BeginTx(repo.ctx, nil)
 	if err != nil {
 		return err
 	}
@@ -150,8 +145,8 @@ func (r *UserRepository) Delete(u model.User) error {
 	DELETE FROM users WHERE username = :username
 	`
 
-	log := r.log.With(slog.String("username", u.Username), slog.String("query", q))
-	log.DebugContext(r.ctx, "Deleting user")
+	log := repo.log.With(slog.String("username", u.Username), slog.String("query", q))
+	log.DebugContext(repo.ctx, "Deleting user")
 
 	_, err = tx.ExecContext(r.ctx, q, sql.Named("username", u.Username))
 	if err != nil {
