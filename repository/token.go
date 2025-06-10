@@ -44,3 +44,47 @@ func NewToken(ctx context.Context, db *sql.DB, log *slog.Logger, assert tinysser
 	return &Token{baseRepostiory: b}, nil
 }
 
+func (repo Token) Create(token model.Token) error {
+	repo.assert.NotNil(repo.db)
+	repo.assert.NotNil(repo.ctx)
+	repo.assert.NotNil(repo.log)
+
+	if err := token.Validate(); err != nil {
+		return errors.Join(ErrInvalidInput, err)
+	}
+
+	tx, err := repo.db.BeginTx(repo.ctx, nil)
+	if err != nil {
+		return errors.Join(ErrDatabaseConn, err)
+	}
+
+	q := `
+	INSERT INTO tokens (id, user_id, created_at, expires_at)
+	VALUES (:id, :user_id, :created_at, :expires_at)
+	`
+
+	log := repo.log.With(slog.String("id", token.ID.String()),
+		slog.String("user_id", token.UserID.String()),
+		slog.String("expires", token.DateExpires.Format(dateFormat)),
+		slog.String("query", q))
+	log.DebugContext(repo.ctx, "Inserting new user token")
+
+	_, err = tx.ExecContext(repo.ctx, q,
+		sql.Named("id", token.ID),
+		sql.Named("user_id", token.UserID),
+		sql.Named("created_at", token.DateCreated.Format(dateFormat)),
+		sql.Named("expired_at", token.DateExpires.Format(dateFormat)),
+	)
+	if err != nil {
+		log.ErrorContext(repo.ctx, "Failed to insert token", slog.String("error", err.Error()))
+		return errors.Join(ErrExecuteQuery, err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		log.ErrorContext(repo.ctx, "Failed to commit transaction", slog.String("error", err.Error()))
+		return errors.Join(ErrCommitQuery, err)
+	}
+
+	return nil
+}
+
