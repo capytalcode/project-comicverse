@@ -17,7 +17,7 @@ var _ Model = (*Project)(nil)
 
 func (m Project) Validate() error {
 	errs := []error{}
-	if len(m.UUID) == 0 {
+	if len(m.ID) == 0 {
 		errs = append(errs, ErrZeroValue{Name: "UUID"})
 	}
 	if m.Title == "" {
