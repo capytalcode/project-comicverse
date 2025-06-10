@@ -32,11 +32,12 @@ func newBaseRepostiory(ctx context.Context, db *sql.DB, log *slog.Logger, assert
 }
 
 var (
-	ErrDatabaseConn = errors.New("failed to begin transaction/connection with database")
-	ErrExecuteQuery = errors.New("failed to execute query")
-	ErrCommitQuery  = errors.New("failed to commit transaction")
-	ErrInvalidData  = errors.New("data sent to save is invalid")
-	ErrNotFound     = sql.ErrNoRows
+	ErrDatabaseConn  = errors.New("repository: failed to begin transaction/connection with database")
+	ErrExecuteQuery  = errors.New("repository: failed to execute query")
+	ErrCommitQuery   = errors.New("repository: failed to commit transaction")
+	ErrInvalidInput  = errors.New("repository: data sent to save is invalid")
+	ErrInvalidOutput = errors.New("repository: data found is not valid")
+	ErrNotFound      = sql.ErrNoRows
 )
 
 var dateFormat = time.RFC3339
