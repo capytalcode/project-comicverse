@@ -7,6 +7,7 @@ import (
 	"forge.capytal.company/capytalcode/project-comicverse/service"
 	"forge.capytal.company/capytalcode/project-comicverse/templates"
 	"forge.capytal.company/loreddev/x/smalltrip/exception"
+	"forge.capytal.company/loreddev/x/smalltrip/middleware"
 	"forge.capytal.company/loreddev/x/tinyssert"
 )
 
@@ -14,6 +15,8 @@ type userController struct {
 	assert    tinyssert.Assertions
 	templates templates.ITemplate
 	service   *service.UserService
+
+	loginPath string
 }
 
 func newUserController(
@@ -131,6 +134,17 @@ func (ctrl userController) register(w http.ResponseWriter, r *http.Request) {
 
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
+
+func (ctrl userController) authMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if ctrl.isLogged(r) {
+			http.Redirect(w, r, ctrl.loginPath, http.StatusTemporaryRedirect)
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
+var _ middleware.Middleware = userController{}.authMiddleware
 
 func (ctrl userController) isLogged(r *http.Request) bool {
 	// TODO: Check if token in valid (depends on token service being implemented)
