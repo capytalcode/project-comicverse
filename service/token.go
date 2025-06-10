@@ -134,3 +134,36 @@ func (svc Token) Revoke(token *jwt.Token) error {
 	return nil
 }
 
+func (svc Token) IsRevoked(token *jwt.Token) (bool, error) {
+	svc.assert.NotNil(svc.log)
+	svc.assert.NotNil(svc.repo)
+	svc.assert.NotNil(token)
+
+	claims, ok := token.Claims.(jwt.RegisteredClaims)
+	if !ok {
+		return false, errors.New("service: invalid claims type")
+	}
+
+	log := svc.log.With(slog.String("token_id", claims.ID))
+	log.Info("Checking if token is revoked")
+	defer log.Info("Finished checking if token is revoked")
+
+	jti, err := uuid.Parse(claims.ID)
+	if err != nil {
+		return false, errors.Join(errors.New("service: invalid token UUID"), err)
+	}
+
+	user, err := uuid.Parse(claims.Subject)
+	if err != nil {
+		return false, errors.Join(errors.New("service: invalid token subject UUID"), err)
+	}
+
+	_, err = svc.repo.Get(jti, user)
+	if errors.Is(err, repository.ErrNotFound) {
+		return true, nil
+	} else if err != nil {
+		return false, errors.Join(errors.New("service: failed to get token"), err)
+	}
+
+	return false, nil
+}
