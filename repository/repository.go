@@ -40,3 +40,7 @@ var (
 )
 
 var dateFormat = time.RFC3339
+
+type scan interface {
+	Scan(dest ...any) error
+}

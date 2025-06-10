@@ -109,6 +109,16 @@ func (repo *UserRepository) GetByUsername(username string) (model.User, error) {
 
 	row := repo.db.QueryRowContext(repo.ctx, q, sql.Named("username", username))
 
+	user, err := repo.scan(row)
+	if err != nil {
+		log.ErrorContext(repo.ctx, "Failed to query user", slog.String("error", err.Error()))
+		return model.User{}, err
+	}
+
+	return user, nil
+}
+
+func (repo *UserRepository) scan(row scan) (model.User, error) {
 	var user model.User
 	var password_hashStr, createdStr, updatedStr string
 	err := row.Scan(&user.ID, &user.Username, &password_hashStr, &createdStr, &updatedStr)
@@ -121,22 +131,25 @@ func (repo *UserRepository) GetByUsername(username string) (model.User, error) {
 		return model.User{}, errors.Join(ErrInvalidOutput, err)
 	}
 
-	c, err := time.Parse(dateFormat, createdStr)
+	created, err := time.Parse(dateFormat, createdStr)
 	if err != nil {
 		return model.User{}, errors.Join(ErrInvalidOutput, err)
 	}
 
-	u, err := time.Parse(dateFormat, updatedStr)
+	updated, err := time.Parse(dateFormat, updatedStr)
 	if err != nil {
 		return model.User{}, errors.Join(ErrInvalidOutput, err)
 	}
 
-	return model.User{
-		Username:    username,
-		Password:    passwd,
-		DateCreated: c,
-		DateUpdated: u,
-	}, nil
+	user.Password = passwd
+	user.DateCreated = created
+	user.DateUpdated = updated
+
+	if err := user.Validate(); err != nil {
+		return model.User{}, errors.Join(ErrInvalidOutput, err)
+	}
+
+	return user, nil
 }
 
 func (repo *UserRepository) Delete(u model.User) error {
