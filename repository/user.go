@@ -10,6 +10,7 @@ import (
 
 	"forge.capytal.company/capytalcode/project-comicverse/model"
 	"forge.capytal.company/loreddev/x/tinyssert"
+	"github.com/google/uuid"
 )
 
 type UserRepository struct {
@@ -90,6 +91,32 @@ func (repo *UserRepository) Create(u model.User) (model.User, error) {
 	}
 
 	return u, nil
+}
+
+func (repo *UserRepository) GetByID(id uuid.UUID) (model.User, error) {
+	repo.assert.NotNil(repo.db)
+	repo.assert.NotNil(repo.log)
+	repo.assert.NotNil(repo.ctx)
+
+	q := `
+	SELECT id, username, password_hash, created_at, updated_at FROM users
+	  WHERE id = :id
+	`
+
+	log := repo.log.With(
+		slog.String("id", id.String()),
+		slog.String("query", q))
+	log.DebugContext(repo.ctx, "Querying user")
+
+	row := repo.db.QueryRowContext(repo.ctx, q, sql.Named("username", id))
+
+	user, err := repo.scan(row)
+	if err != nil {
+		log.ErrorContext(repo.ctx, "Failed to query user", slog.String("error", err.Error()))
+		return model.User{}, err
+	}
+
+	return user, nil
 }
 
 func (repo *UserRepository) GetByUsername(username string) (model.User, error) {
