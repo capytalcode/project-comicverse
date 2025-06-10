@@ -65,30 +65,12 @@ func (s *UserService) Login(username, password string) (signedToken string, user
 		return "", model.User{}, errors.Join(errors.New("unable to compare passwords"), err)
 	}
 
-	t := time.Now()
-	jti, err := uuid.NewV7()
-	if err != nil {
-		return "", model.User{}, errors.Join(errors.New("unable to generate token ID"), err)
-	}
-
-	// TODO: Use ECDSA, so users can verify that their token is signed by the project
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.RegisteredClaims{
-		// TODO: Add IDs to users
-		Issuer:    "comicverse",
-		Subject:   username,
-		IssuedAt:  jwt.NewNumericDate(t),
-		NotBefore: jwt.NewNumericDate(t),
-		ID:        jti.String(),
-	})
-	signedToken, err = token.SignedString(jwtKey)
-	if err != nil {
 		return "", user, errors.Join(errors.New("unable to sign token"), err)
+		return model.User{}, errors.Join(errors.New("service: unable to compare passwords"), err)
 	}
 
-	return signedToken, user, nil
+	return user, nil
 }
-
-var jwtKey = []byte("ieurqpieurqpoiweurpewoqueiur") // TODO: move to environment variable
 
 var (
 	ErrAlreadyExists     = errors.New("model already exists")
