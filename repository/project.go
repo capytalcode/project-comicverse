@@ -25,7 +25,7 @@ func NewProject(ctx context.Context, db *sql.DB, log *slog.Logger, assert tinyss
 
 	_, err = tx.ExecContext(ctx, `
 	CREATE TABLE IF NOT EXISTS projects (
-		uuid		  TEXT NOT NULL PRIMARY KEY,
+		id		  TEXT NOT NULL PRIMARY KEY,
 		title         TEXT NOT NULL,
 		created_at    TEXT NOT NULL,
 		updated_at    TEXT NOT NULL
@@ -56,15 +56,15 @@ func (repo Project) Create(p model.Project) error {
 	}
 
 	q := `
-	INSERT INTO users (uuid, title, created_at, updated_at)
-	  VALUES (:uuid, :title, :created_at, :updated_at)
+	INSERT INTO users (id, title, created_at, updated_at)
+	  VALUES (:id, :title, :created_at, :updated_at)
 	`
 
 	log := repo.log.With(slog.String("uuid", p.UUID.String()), slog.String("query", q))
 	log.DebugContext(repo.ctx, "Inserting new project")
 
 	_, err = tx.ExecContext(repo.ctx, q,
-		sql.Named("uuid", p.UUID),
+		sql.Named("id", p.UUID),
 		sql.Named("title", p.Title),
 		sql.Named("created_at", p.DateCreated.Format(dateFormat)),
 		sql.Named("updated_at", p.DateUpdated.Format(dateFormat)),
@@ -100,15 +100,16 @@ func (repo Project) Update(p model.Project) error {
 	UPDATE projects 
 	SET title = :title
 	    updated_at = :updated_at
-	WHERE uuid = :uuid
+	WHERE id = :id
 	`
 
-	log := repo.log.With(slog.String("uuid", p.UUID.String()), slog.String("query", q))
+	log := repo.log.With(slog.String("id", p.UUID.String()), slog.String("query", q))
 	log.DebugContext(repo.ctx, "Updating project")
 
 	_, err = tx.ExecContext(repo.ctx, q,
 		sql.Named("title", p.Title),
 		sql.Named("updated_at", p.DateUpdated.Format(dateFormat)),
+		sql.Named("id", p.ID),
 	)
 	if err != nil {
 		log.ErrorContext(repo.ctx, "Failed to insert project", slog.String("error", err.Error()))
