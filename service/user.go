@@ -88,8 +88,7 @@ func (svc *User) Login(username, password string) (user model.User, err error) {
 }
 
 var (
-	ErrAlreadyExists     = errors.New("model already exists")
-	ErrNotFound          = repository.ErrNotFound
-	ErrPasswordTooLong   = bcrypt.ErrPasswordTooLong
-	ErrIncorrectPassword = bcrypt.ErrMismatchedHashAndPassword
+	ErrUsernameAlreadyExists = errors.New("service: username already exists")
+	ErrPasswordTooLong       = bcrypt.ErrPasswordTooLong
+	ErrIncorrectPassword     = bcrypt.ErrMismatchedHashAndPassword
 )
