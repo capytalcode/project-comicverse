@@ -15,18 +15,18 @@ type Project struct {
 
 var _ Model = (*Project)(nil)
 
-func (m Project) Validate() error {
+func (p Project) Validate() error {
 	errs := []error{}
-	if len(m.ID) == 0 {
+	if len(p.ID) == 0 {
 		errs = append(errs, ErrZeroValue{Name: "UUID"})
 	}
-	if m.Title == "" {
+	if p.Title == "" {
 		errs = append(errs, ErrZeroValue{Name: "Title"})
 	}
-	if m.DateCreated.IsZero() {
+	if p.DateCreated.IsZero() {
 		errs = append(errs, ErrZeroValue{Name: "DateCreated"})
 	}
-	if m.DateUpdated.IsZero() {
+	if p.DateUpdated.IsZero() {
 		errs = append(errs, ErrZeroValue{Name: "DateUpdated"})
 	}
 
