@@ -7,14 +7,13 @@ import (
 	"forge.capytal.company/capytalcode/project-comicverse/model"
 	"forge.capytal.company/capytalcode/project-comicverse/repository"
 	"forge.capytal.company/loreddev/x/tinyssert"
-	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type User struct {
+	repo *repository.User
 	assert tinyssert.Assertions
-	repo   *repository.UserRepository
 }
 
 func NewUser(repo *repository.User, logger *slog.Logger, assert tinyssert.Assertions) *User {
