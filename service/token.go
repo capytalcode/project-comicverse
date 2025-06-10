@@ -101,3 +101,36 @@ func (svc Token) Parse(tokenStr string) (*jwt.Token, error) {
 	return token, nil
 }
 
+func (svc Token) Revoke(token *jwt.Token) error {
+	svc.assert.NotNil(svc.log)
+	svc.assert.NotNil(svc.repo)
+	svc.assert.NotNil(token)
+
+	claims, ok := token.Claims.(jwt.RegisteredClaims)
+	if !ok {
+		return errors.New("service: invalid claims type")
+	}
+
+	log := svc.log.With(slog.String("token_id", claims.ID))
+	log.Info("Revoking token")
+	defer log.Info("Finished revoking token")
+
+	jti, err := uuid.Parse(claims.ID)
+	if err != nil {
+		return errors.Join(errors.New("service: invalid token UUID"), err)
+	}
+
+	user, err := uuid.Parse(claims.Subject)
+	if err != nil {
+		return errors.Join(errors.New("service: invalid token subject UUID"), err)
+	}
+
+	// TODO: Mark tokens as revoked instead of deleting them
+	err = svc.repo.Delete(jti, user)
+	if err != nil {
+		return errors.Join(errors.New("service: failed to delete token"), err)
+	}
+
+	return nil
+}
+
