@@ -179,7 +179,7 @@ func (repo *User) scan(row scan) (model.User, error) {
 	return user, nil
 }
 
-func (repo *User) Delete(u model.User) error {
+func (repo *User) DeleteByID(id uuid.UUID) error {
 	repo.assert.NotNil(repo.db)
 	repo.assert.NotNil(repo.log)
 	repo.assert.NotNil(repo.ctx)
@@ -193,10 +193,10 @@ func (repo *User) Delete(u model.User) error {
 	DELETE FROM users WHERE id = :id
 	`
 
-	log := repo.log.With(slog.String("id", u.ID.String()), slog.String("query", q))
+	log := repo.log.With(slog.String("id", id.String()), slog.String("query", q))
 	log.DebugContext(repo.ctx, "Deleting user")
 
-	_, err = tx.ExecContext(repo.ctx, q, sql.Named("id", u.ID))
+	_, err = tx.ExecContext(repo.ctx, q, sql.Named("id", id))
 	if err != nil {
 		log.ErrorContext(repo.ctx, "Failed to delete user", slog.String("error", err.Error()))
 		return errors.Join(ErrExecuteQuery, err)
