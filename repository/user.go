@@ -13,21 +13,17 @@ import (
 )
 
 type UserRepository struct {
-	db *sql.DB
-
-	ctx    context.Context
-	log    *slog.Logger
-	assert tinyssert.Assertions
+	baseRepostiory
 }
 
 func NewUserRepository(
-	db *sql.DB,
 	ctx context.Context,
+	db *sql.DB,
 	logger *slog.Logger,
 	assert tinyssert.Assertions,
 ) (*UserRepository, error) {
-	assert.NotNil(db)
 	assert.NotNil(ctx)
+	assert.NotNil(db)
 	assert.NotNil(logger)
 
 	_, err := db.Exec(`CREATE TABLE IF NOT EXISTS users (
@@ -40,11 +36,10 @@ func NewUserRepository(
 		return nil, err
 	}
 
+	b := newBaseRepostiory(ctx, db, logger, assert)
+
 	return &UserRepository{
-		db:     db,
-		ctx:    ctx,
-		log:    logger,
-		assert: assert,
+		baseRepostiory: b,
 	}, nil
 }
 
