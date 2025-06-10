@@ -10,11 +10,11 @@ import (
 	"forge.capytal.company/loreddev/x/tinyssert"
 )
 
-type ProjectRepository struct {
+type Project struct {
 	baseRepostiory
 }
 
-func NewProjectRepository(ctx context.Context, db *sql.DB, log *slog.Logger, assert tinyssert.Assertions) (*ProjectRepository, error) {
+func NewProject(ctx context.Context, db *sql.DB, log *slog.Logger, assert tinyssert.Assertions) (*ProjectRepository, error) {
 	b := newBaseRepostiory(ctx, db, log, assert)
 
 	tx, err := db.BeginTx(ctx, nil)
@@ -37,16 +37,16 @@ func NewProjectRepository(ctx context.Context, db *sql.DB, log *slog.Logger, ass
 		return nil, errors.Join(errors.New("unable to create project tables"), err)
 	}
 
-	return &ProjectRepository{baseRepostiory: b}, nil
+	return &Project{baseRepostiory: b}, nil
 }
 
-func (repo ProjectRepository) Create(p model.Project) error {
+func (repo Project) Create(p model.Project) error {
 	repo.assert.NotNil(repo.db)
 	repo.assert.NotNil(repo.ctx)
 	repo.assert.NotNil(repo.ctx)
 
 	if err := p.Validate(); err != nil {
-		return errors.Join(ErrInvalidData, err)
+		return errors.Join(ErrInvalidInput, err)
 	}
 
 	tx, err := repo.db.BeginTx(repo.ctx, nil)
@@ -81,13 +81,13 @@ func (repo ProjectRepository) Create(p model.Project) error {
 	return nil
 }
 
-func (repo ProjectRepository) Update(p model.Project) error {
+func (repo Project) Update(p model.Project) error {
 	repo.assert.NotNil(repo.db)
 	repo.assert.NotNil(repo.ctx)
 	repo.assert.NotNil(repo.ctx)
 
 	if err := p.Validate(); err != nil {
-		return errors.Join(ErrInvalidData, err)
+		return errors.Join(ErrInvalidInput, err)
 	}
 
 	tx, err := repo.db.BeginTx(repo.ctx, nil)
@@ -122,7 +122,7 @@ func (repo ProjectRepository) Update(p model.Project) error {
 	return nil
 }
 
-func (repo ProjectRepository) Delete(p model.Project) error {
+func (repo Project) Delete(p model.Project) error {
 	repo.assert.NotNil(repo.db)
 	repo.assert.NotNil(repo.ctx)
 	repo.assert.NotNil(repo.ctx)
