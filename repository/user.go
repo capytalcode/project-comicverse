@@ -49,6 +49,10 @@ func (repo *UserRepository) Create(u model.User) (model.User, error) {
 	repo.assert.NotNil(repo.log)
 	repo.assert.NotNil(repo.ctx)
 
+	if err := u.Validate(); err != nil {
+		return model.User{}, err
+	}
+
 	tx, err := repo.db.BeginTx(repo.ctx, nil)
 	if err != nil {
 		return model.User{}, errors.Join(ErrDatabaseConn, err)
