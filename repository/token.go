@@ -197,3 +197,40 @@ func (repo Token) scan(row scan) (model.Token, error) {
 	return token, nil
 }
 
+func (repo Token) Delete(token, user uuid.UUID) error {
+	repo.assert.NotNil(repo.db)
+	repo.assert.NotNil(repo.ctx)
+	repo.assert.NotNil(repo.log)
+
+	tx, err := repo.db.BeginTx(repo.ctx, nil)
+	if err != nil {
+		return err
+	}
+
+	q := `
+	DELETE FROM tokens
+	WHERE id      = :id
+	  AND user_id = :user_id
+	`
+
+	log := repo.log.With(slog.String("id", token.String()),
+		slog.String("user_id", user.String()),
+		slog.String("query", q))
+	log.DebugContext(repo.ctx, "Deleting token")
+
+	_, err = tx.ExecContext(repo.ctx, q,
+		sql.Named("id", token),
+		sql.Named("user_id", user),
+	)
+	if err != nil {
+		log.ErrorContext(repo.ctx, "Failed to delete token", slog.String("error", err.Error()))
+		return errors.Join(ErrExecuteQuery, err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		log.ErrorContext(repo.ctx, "Failed to commit transaction", slog.String("error", err.Error()))
+		return errors.Join(ErrCommitQuery, err)
+	}
+
+	return nil
+}
