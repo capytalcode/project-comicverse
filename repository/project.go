@@ -15,7 +15,7 @@ type Project struct {
 	baseRepostiory
 }
 
-func NewProject(ctx context.Context, db *sql.DB, log *slog.Logger, assert tinyssert.Assertions) (*ProjectRepository, error) {
+func NewProject(ctx context.Context, db *sql.DB, log *slog.Logger, assert tinyssert.Assertions) (*Project, error) {
 	b := newBaseRepostiory(ctx, db, log, assert)
 
 	tx, err := db.BeginTx(ctx, nil)
@@ -60,11 +60,11 @@ func (repo Project) Create(p model.Project) error {
 	  VALUES (:id, :title, :created_at, :updated_at)
 	`
 
-	log := repo.log.With(slog.String("uuid", p.UUID.String()), slog.String("query", q))
+	log := repo.log.With(slog.String("id", p.ID.String()), slog.String("query", q))
 	log.DebugContext(repo.ctx, "Inserting new project")
 
 	_, err = tx.ExecContext(repo.ctx, q,
-		sql.Named("id", p.UUID),
+		sql.Named("id", p.ID),
 		sql.Named("title", p.Title),
 		sql.Named("created_at", p.DateCreated.Format(dateFormat)),
 		sql.Named("updated_at", p.DateUpdated.Format(dateFormat)),
@@ -103,7 +103,7 @@ func (repo Project) Update(p model.Project) error {
 	WHERE id = :id
 	`
 
-	log := repo.log.With(slog.String("id", p.UUID.String()), slog.String("query", q))
+	log := repo.log.With(slog.String("id", p.ID.String()), slog.String("query", q))
 	log.DebugContext(repo.ctx, "Updating project")
 
 	_, err = tx.ExecContext(repo.ctx, q,
