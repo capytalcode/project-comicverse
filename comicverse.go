@@ -127,18 +127,22 @@ func (app *app) setup() error {
 	app.assert.NotNil(app.assets)
 	app.assert.NotNil(app.logger)
 
-	userRepo, err := repository.NewUserRepository(app.db, app.ctx, app.logger, app.assert)
+	userRepository, err := repository.NewUser(app.ctx, app.db, app.logger.WithGroup("repository.user"), app.assert)
 	if err != nil {
-		return err
+		return errors.Join(errors.New("app: failed to start user repository"), err)
 	}
 
-	userService, err := service.NewUserService(userRepo, app.assert)
+	tokenRepository, err := repository.NewToken(app.ctx, app.db, app.logger.WithGroup("repository.logger"), app.assert)
 	if err != nil {
-		return err
+		return errors.Join(errors.New("app: failed to start token repository"), err)
 	}
+
+	userService := service.NewUser(userRepository, app.logger.WithGroup("service.user"), app.assert)
+	tokenService := service.NewToken(tokenRepository, app.logger.WithGroup("service.token"), app.assert)
 
 	app.handler, err = router.New(router.Config{
 		UserService: userService,
+		TokenService: tokenService,
 
 		Templates:    app.templates,
 		DisableCache: app.developmentMode,

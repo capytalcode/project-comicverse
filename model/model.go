@@ -31,10 +31,10 @@ func (err ErrInvalidValue) Error() string {
 	var msg string
 
 	if err.Name != "" {
-		msg = fmt.Sprintf("%q has", err.Name)
+		msg = fmt.Sprintf("%q has ", err.Name)
 	}
 
-	msg = msg + " incorrect value"
+	msg = msg + "incorrect value"
 
 	if err.Actual != nil {
 		msg = msg + fmt.Sprintf(" %q", err.Actual)
