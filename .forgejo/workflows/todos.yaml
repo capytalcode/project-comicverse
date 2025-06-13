@@ -1,0 +1,17 @@
+name: TODO tracker
+on: [push, pull_request]
+jobs:
+  build:
+    runs-on: alpine
+    steps:
+      - uses: actions/checkout@v3
+      - uses: tdg-forgejo-action
+        with:
+          TOKEN: ${{ secrets.FORGEJO_TOKEN }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+          REF: ${{ github.ref }}
+          LABEL: status/todo
+          DRY_RUN: true
+          COMMENT_ON_ISSUES: 128
+          ASSIGN_FROM_BLAME: 128
