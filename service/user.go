@@ -23,7 +23,7 @@ func NewUser(repo *repository.User, logger *slog.Logger, assert tinyssert.Assert
 	assert.NotNil(repo)
 	assert.NotNil(logger)
 
-	return &User{repo: repo, assert: assert}
+	return &User{repo: repo, assert: assert, log: logger}
 }
 
 func (svc *User) Register(username, password string) (model.User, error) {
