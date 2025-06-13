@@ -32,7 +32,7 @@ func NewToken(ctx context.Context, db *sql.DB, log *slog.Logger, assert tinysser
 		created_at TEXT NOT NULL,
 		expires_at TEXT NOT NULL,
 
-		PRIMARY KEY(uuid, user_id),
+		PRIMARY KEY(id, user_id),
 		FOREIGN KEY(user_id)
 			REFERENCES users (id)
 				ON DELETE CASCADE
@@ -74,6 +74,7 @@ func (repo Token) Create(token model.Token) error {
 		slog.String("query", q))
 	log.DebugContext(repo.ctx, "Inserting new user token")
 
+	// TODO: Check rows affected
 	_, err = tx.ExecContext(repo.ctx, q,
 		sql.Named("id", token.ID),
 		sql.Named("user_id", token.UserID),
