@@ -123,7 +123,7 @@ func (repo Token) Get(tokenID, userID uuid.UUID) (model.Token, error) {
 	return token, nil
 }
 
-func (repo Token) GetByUserID(userID uuid.UUID) ([]model.Token, error) {
+func (repo Token) GetByUserID(userID uuid.UUID) (tokens []model.Token, err error) {
 	repo.assert.NotNil(repo.db)
 	repo.assert.NotNil(repo.ctx)
 	repo.assert.NotNil(repo.log)
@@ -142,12 +142,20 @@ func (repo Token) GetByUserID(userID uuid.UUID) ([]model.Token, error) {
 	rows, err := repo.db.QueryContext(repo.ctx, q,
 		sql.Named("user_id", userID),
 	)
+
+	defer func() {
+		err = rows.Close()
+		if err != nil {
+			err = errors.Join(ErrCloseConn, err)
+		}
+	}()
+
 	if err != nil {
 		log.ErrorContext(repo.ctx, "Failed to get user tokens", slog.String("error", err.Error()))
 		return []model.Token{}, errors.Join(ErrExecuteQuery, err)
 	}
 
-	tokens := []model.Token{}
+	tokens = []model.Token{}
 	for rows.Next() {
 		t, err := repo.scan(rows)
 		if err != nil {
@@ -163,7 +171,7 @@ func (repo Token) GetByUserID(userID uuid.UUID) ([]model.Token, error) {
 		return []model.Token{}, errors.Join(ErrExecuteQuery, err)
 	}
 
-	return tokens, nil
+	return tokens, err
 }
 
 func (repo Token) scan(row scan) (model.Token, error) {

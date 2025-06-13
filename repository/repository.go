@@ -32,7 +32,9 @@ func newBaseRepostiory(ctx context.Context, db *sql.DB, log *slog.Logger, assert
 }
 
 var (
+	// TODO: Change all ErrDatabaseConn to ErrCloseConn
 	ErrDatabaseConn  = errors.New("repository: failed to begin transaction/connection with database")
+	ErrCloseConn     = errors.New("repository: failed to close/commit connection")
 	ErrExecuteQuery  = errors.New("repository: failed to execute query")
 	ErrCommitQuery   = errors.New("repository: failed to commit transaction")
 	ErrInvalidInput  = errors.New("repository: data sent to save is invalid")
