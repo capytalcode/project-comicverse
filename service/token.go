@@ -73,6 +73,7 @@ func (svc *Token) Issue(user model.User) (string, error) { // TODO: Return a ref
 	// TODO: Store refresh tokens in repo
 	err = svc.repo.Create(model.Token{
 		ID:          jti,
+		UserID:      user.ID,
 		DateCreated: now,
 		DateExpires: expires,
 	})
@@ -93,7 +94,7 @@ func (svc Token) Parse(tokenStr string) (*jwt.Token, error) {
 		return nil, errors.Join(errors.New("service: invalid token"), err)
 	}
 
-	_, ok := token.Claims.(jwt.RegisteredClaims)
+	_, ok := token.Claims.(jwt.RegisteredClaims) // TODO: Check issuer and if the token was issued at the correct date
 	if !ok {
 		return nil, errors.New("service: invalid claims type")
 	}
