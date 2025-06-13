@@ -4,8 +4,8 @@ jobs:
   build:
     runs-on: alpine
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/tdg-forgejo-action@master
+      - uses: https://forge.capytal.company/actions/checkout@v3
+      - uses: https://forge.capytal.company/actions/tdg-forgejo-action@master
         with:
           TOKEN: ${{ secrets.FORGEJO_TOKEN }}
           REPO: ${{ github.repository }}
