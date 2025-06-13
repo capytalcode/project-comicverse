@@ -35,7 +35,7 @@ func (svc *User) Register(username, password string) (model.User, error) {
 	defer log.Info("Finished registering user")
 
 	if _, err := svc.repo.GetByUsername(username); err == nil {
-		return model.User{}, ErrAlreadyExists
+		return model.User{}, ErrUsernameAlreadyExists
 	}
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
