@@ -107,6 +107,8 @@ func (router *router) setup() http.Handler {
 
 	r.Handle("/assets/", http.StripPrefix("/assets/", http.FileServerFS(router.assets)))
 
+	r.Use(userController.userMiddleware)
+
 	r.HandleFunc("/{$}", func(w http.ResponseWriter, r *http.Request) {
 		// TODO: Add a way to the user to bypass this check and see the landing page.
 		//       Probably a query parameter to bypass like "?landing=true"

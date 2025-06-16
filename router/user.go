@@ -159,16 +159,34 @@ func (ctrl userController) register(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
-func (ctrl userController) authMiddleware(next http.Handler) http.Handler {
+func (ctrl userController) userMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if ctrl.isLogged(r) {
-			http.Redirect(w, r, ctrl.loginPath, http.StatusTemporaryRedirect)
+		var token string
+		if t := r.Header.Get("Authorization"); t != "" {
+			token = t
+		} else if cs := r.CookiesNamed("authorization"); len(cs) > 0 {
+			token = cs[0].Value // TODO: Validate cookie
 		}
-		next.ServeHTTP(w, r)
+
+		if token == "" {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		ctx := r.Context()
+
+		t, err := ctrl.tokenSvc.Parse(token)
+		if err != nil {
+			ctx = context.WithValue(ctx, "x-comicverse-user-token-error", err)
+		} else {
+			ctx = context.WithValue(ctx, "x-comicverse-user-token", t)
+		}
+
+		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 
-var _ middleware.Middleware = userController{}.authMiddleware
+var _ middleware.Middleware = userController{}.userMiddleware
 
 func (ctrl userController) isLogged(r *http.Request) bool {
 	// TODO: Check if token in valid (depends on token service being implemented)
