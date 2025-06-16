@@ -2,6 +2,7 @@ package comicverse
 
 import (
 	"context"
+	"crypto/ed25519"
 	"database/sql"
 	"errors"
 	"io"
@@ -21,9 +22,11 @@ import (
 
 func New(cfg Config, opts ...Option) (http.Handler, error) {
 	app := &app{
-		db:     cfg.DB,
-		s3:     cfg.S3,
-		bucket: cfg.Bucket,
+		db:         cfg.DB,
+		s3:         cfg.S3,
+		bucket:     cfg.Bucket,
+		privateKey: cfg.PrivateKey,
+		publicKey:  cfg.PublicKey,
 
 		assets:          assets.Files(),
 		templates:       templates.Templates(),
@@ -43,6 +46,12 @@ func New(cfg Config, opts ...Option) (http.Handler, error) {
 	}
 	if app.s3 == nil {
 		return nil, errors.New("s3 client must not be nil")
+	}
+	if app.privateKey == nil || len(app.privateKey) == 0 {
+		return nil, errors.New("private key client must not be nil")
+	}
+	if app.publicKey == nil || len(app.publicKey) == 0 {
+		return nil, errors.New("public key client must not be nil")
 	}
 	if app.bucket == "" {
 		return nil, errors.New("bucket must not be a empty string")
@@ -71,9 +80,11 @@ func New(cfg Config, opts ...Option) (http.Handler, error) {
 }
 
 type Config struct {
-	DB     *sql.DB
-	S3     *s3.Client
-	Bucket string
+	DB         *sql.DB
+	S3         *s3.Client
+	Bucket     string
+	PrivateKey ed25519.PrivateKey // TODO: Put this inside a service so we can easily rotate keys
+	PublicKey  ed25519.PublicKey
 }
 
 type Option func(*app)
@@ -103,9 +114,11 @@ func WithDevelopmentMode() Option {
 }
 
 type app struct {
-	db     *sql.DB
-	s3     *s3.Client
-	bucket string
+	db         *sql.DB
+	s3         *s3.Client
+	bucket     string
+	privateKey ed25519.PrivateKey
+	publicKey  ed25519.PublicKey
 
 	ctx context.Context
 
@@ -138,10 +151,16 @@ func (app *app) setup() error {
 	}
 
 	userService := service.NewUser(userRepository, app.logger.WithGroup("service.user"), app.assert)
-	tokenService := service.NewToken(tokenRepository, app.logger.WithGroup("service.token"), app.assert)
+	tokenService := service.NewToken(service.TokenConfig{
+		PrivateKey: app.privateKey,
+		PublicKey:  app.publicKey,
+		Repository: tokenRepository,
+		Logger:     app.logger.WithGroup("service.token"),
+		Assertions: app.assert,
+	})
 
 	app.handler, err = router.New(router.Config{
-		UserService: userService,
+		UserService:  userService,
 		TokenService: tokenService,
 
 		Templates:    app.templates,

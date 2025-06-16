@@ -162,9 +162,11 @@ func main() {
 	}
 
 	app, err := comicverse.New(comicverse.Config{
-		DB:     db,
-		S3:     storage,
-		Bucket: s3Bucket,
+		DB:         db,
+		S3:         storage,
+		PrivateKey: edPrivKey,
+		PublicKey:  edPubKey,
+		Bucket:     s3Bucket,
 	}, opts...)
 	if err != nil {
 		log.Error("Failed to initiate comicverse app", slog.String("error", err.Error()))
