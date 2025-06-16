@@ -3,6 +3,7 @@ package service
 import (
 	"crypto/ed25519"
 	"errors"
+	"fmt"
 	"log/slog"
 	"time"
 
@@ -23,19 +24,27 @@ type Token struct {
 	assert tinyssert.Assertions
 }
 
-func NewToken(
-	privateKey ed25519.PrivateKey,
-	publicKey ed25519.PublicKey,
-	repo *repository.Token,
-	logger *slog.Logger,
-	assert tinyssert.Assertions,
-) *Token {
-	assert.NotZero(privateKey)
-	assert.NotZero(publicKey)
-	assert.NotZero(repo)
-	assert.NotZero(logger)
+func NewToken(cfg TokenConfig) *Token {
+	cfg.Assertions.NotZero(cfg.PrivateKey)
+	cfg.Assertions.NotZero(cfg.PublicKey)
+	cfg.Assertions.NotZero(cfg.Repository)
+	cfg.Assertions.NotZero(cfg.Logger)
 
-	return &Token{assert: assert}
+	return &Token{
+		privateKey: cfg.PrivateKey,
+		publicKey:  cfg.PublicKey,
+		repo:       cfg.Repository,
+		log:        cfg.Logger,
+		assert:     cfg.Assertions,
+	}
+}
+
+type TokenConfig struct {
+	PrivateKey ed25519.PrivateKey
+	PublicKey  ed25519.PublicKey
+	Repository *repository.Token
+	Logger     *slog.Logger
+	Assertions tinyssert.Assertions
 }
 
 func (svc *Token) Issue(user model.User) (string, error) { // TODO: Return a refresh token
