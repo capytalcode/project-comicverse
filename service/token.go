@@ -100,7 +100,9 @@ func (svc Token) Parse(tokenStr string) (*jwt.Token, error) {
 		return nil, errors.Join(errors.New("service: invalid token"), err)
 	}
 
-	_, ok := token.Claims.(jwt.RegisteredClaims) // TODO: Check issuer and if the token was issued at the correct date
+	// TODO: Check issuer and if the token was issued at the correct date
+	// TODO: Structure token claims type
+	_, ok := token.Claims.(jwt.MapClaims)
 	if !ok {
 		log.Error("Invalid claims type", slog.String("claims", fmt.Sprintf("%#v", token.Claims)))
 		return nil, errors.New("service: invalid claims type")
