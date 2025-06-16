@@ -15,7 +15,8 @@ import (
 )
 
 type router struct {
-	userService *service.UserService
+	userService  *service.User
+	tokenService *service.Token
 
 	templates templates.ITemplate
 	assets    fs.FS
@@ -28,6 +29,9 @@ type router struct {
 func New(cfg Config) (http.Handler, error) {
 	if cfg.UserService == nil {
 		return nil, errors.New("user service is nil")
+	}
+	if cfg.TokenService == nil {
+		return nil, errors.New("token service is nil")
 	}
 	if cfg.Templates == nil {
 		return nil, errors.New("templates is nil")
@@ -43,7 +47,8 @@ func New(cfg Config) (http.Handler, error) {
 	}
 
 	r := &router{
-		userService: cfg.UserService,
+		userService:  cfg.UserService,
+		tokenService: cfg.TokenService,
 
 		templates: cfg.Templates,
 		assets:    cfg.Assets,
@@ -57,7 +62,8 @@ func New(cfg Config) (http.Handler, error) {
 }
 
 type Config struct {
-	UserService *service.UserService
+	UserService  *service.User
+	TokenService *service.Token
 
 	Templates    templates.ITemplate
 	Assets       fs.FS
@@ -90,7 +96,6 @@ func (router *router) setup() http.Handler {
 	r.Use(exception.PanicMiddleware())
 	r.Use(exception.Middleware())
 
-	userController := newUserController(router.userService, router.templates, router.assert)
 
 	r.Handle("/assets/", http.StripPrefix("/assets/", http.FileServerFS(router.assets)))
 
