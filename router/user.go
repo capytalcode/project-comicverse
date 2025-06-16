@@ -11,6 +11,7 @@ import (
 	"forge.capytal.company/loreddev/x/smalltrip/middleware"
 	"forge.capytal.company/loreddev/x/tinyssert"
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/google/uuid"
 )
 
 type userController struct {
@@ -175,6 +176,11 @@ func (ctrl userController) userMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
+		// TODO: Create some way to show the user what error occurred with the token,
+		// not just the Unathorize method of UserContext. Maybe a web socket to send
+		// the message? Or maybe a custom Header? A header can be intercepted via a
+		// listener in the HTMX framework probably.
+
 		ctx := r.Context()
 
 		t, err := ctrl.tokenSvc.Parse(token)
@@ -219,19 +225,29 @@ func (ctx UserContext) Unathorize(w http.ResponseWriter, r *http.Request) {
 	excep.ServeHTTP(w, r)
 }
 
-func (ctx UserContext) GetUserID() (string, bool) {
+func (ctx UserContext) GetUserID() (uuid.UUID, bool) {
 	claims, ok := ctx.GetClaims()
 	if !ok {
-		return "", false
+		return uuid.UUID{}, false
 	}
 
 	sub, ok := claims["sub"]
 	if !ok {
-		return "", false
+		return uuid.UUID{}, false
 	}
 
 	s, ok := sub.(string)
-	return s, ok
+	if !ok {
+		return uuid.UUID{}, false
+	}
+
+	id, err := uuid.Parse(s)
+	if err != nil {
+		// TODO?: Add error to error context
+		return uuid.UUID{}, false
+	}
+
+	return id, true
 }
 
 func (ctx UserContext) GetClaims() (jwt.MapClaims, bool) {
