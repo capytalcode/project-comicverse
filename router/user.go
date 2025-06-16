@@ -1,6 +1,7 @@
 package router
 
 import (
+	"context"
 	"errors"
 	"net/http"
 
@@ -9,6 +10,7 @@ import (
 	"forge.capytal.company/loreddev/x/smalltrip/exception"
 	"forge.capytal.company/loreddev/x/smalltrip/middleware"
 	"forge.capytal.company/loreddev/x/tinyssert"
+	"github.com/golang-jwt/jwt/v4"
 )
 
 type userController struct {
@@ -107,7 +109,7 @@ func (ctrl userController) login(w http.ResponseWriter, r *http.Request) {
 
 func (ctrl userController) register(w http.ResponseWriter, r *http.Request) {
 	ctrl.assert.NotNil(ctrl.templates)
-	ctrl.assert.NotNil(ctrl.service)
+	ctrl.assert.NotNil(ctrl.userSvc)
 
 	if r.Method == http.MethodGet {
 		err := ctrl.templates.ExecuteTemplate(w, "register", nil)
@@ -188,8 +190,90 @@ func (ctrl userController) userMiddleware(next http.Handler) http.Handler {
 
 var _ middleware.Middleware = userController{}.userMiddleware
 
-func (ctrl userController) isLogged(r *http.Request) bool {
-	// TODO: Check if token in valid (depends on token service being implemented)
-	cs := r.CookiesNamed("token")
-	return len(cs) > 0
+type UserContext struct {
+	context.Context
+}
+
+func NewUserContext(ctx context.Context) UserContext {
+	if uctxp, ok := ctx.(*UserContext); ok && uctxp != nil {
+		return *uctxp
+	} else if uctx, ok := ctx.(UserContext); ok {
+		return uctx
+	}
+	return UserContext{Context: ctx}
+}
+
+func (ctx UserContext) Unathorize(w http.ResponseWriter, r *http.Request) {
+	// TODO: Add a way to redirect to the login page in case of a incorrect token.
+	// Since we use HTMX, we can't just return a redirect response probably,
+	// the framework will just get the login page html and not redirect the user to the page.
+
+	msg := `The "Authorization" header or "authorization" cookie must be present with a valid token`
+	var excep exception.Exception
+	if err, ok := ctx.GetTokenErr(); ok {
+		excep = exception.Unathorized(msg, exception.WithError(err))
+	} else {
+		excep = exception.Unathorized(msg)
+	}
+
+	excep.ServeHTTP(w, r)
+}
+
+func (ctx UserContext) GetUserID() (string, bool) {
+	claims, ok := ctx.GetClaims()
+	if !ok {
+		return "", false
+	}
+
+	sub, ok := claims["sub"]
+	if !ok {
+		return "", false
+	}
+
+	s, ok := sub.(string)
+	return s, ok
+}
+
+func (ctx UserContext) GetClaims() (jwt.MapClaims, bool) {
+	token, ok := ctx.GetToken()
+	if !ok {
+		return jwt.MapClaims{}, false
+	}
+
+	// TODO: Make claims type be registered in the user service
+	// TODO: Structure claims type
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		return jwt.MapClaims{}, false
+	}
+
+	return claims, true
+}
+
+func (ctx UserContext) GetToken() (*jwt.Token, bool) {
+	t := ctx.Value("x-comicverse-user-token")
+	if t == nil {
+		return nil, false
+	}
+
+	token, ok := t.(*jwt.Token)
+	if !ok {
+		return nil, false
+	}
+
+	return token, true
+}
+
+func (ctx UserContext) GetTokenErr() (error, bool) {
+	e := ctx.Value("x-comicverse-user-token-error")
+	if e == nil {
+		return nil, false
+	}
+
+	err, ok := e.(error)
+	if !ok {
+		return nil, false
+	}
+
+	return err, true
 }

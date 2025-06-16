@@ -112,7 +112,8 @@ func (router *router) setup() http.Handler {
 	r.HandleFunc("/{$}", func(w http.ResponseWriter, r *http.Request) {
 		// TODO: Add a way to the user to bypass this check and see the landing page.
 		//       Probably a query parameter to bypass like "?landing=true"
-		if userController.isLogged(r) {
+		if _, ok := NewUserContext(r.Context()).GetUserID(); ok {
+			// TODO: Dashboard handler
 			err := router.templates.ExecuteTemplate(w, "dashboard", nil)
 			if err != nil {
 				exception.InternalServerError(err).ServeHTTP(w, r)
