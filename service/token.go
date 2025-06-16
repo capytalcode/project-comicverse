@@ -86,16 +86,23 @@ func (svc *Token) Issue(user model.User) (string, error) { // TODO: Return a ref
 
 func (svc Token) Parse(tokenStr string) (*jwt.Token, error) {
 	svc.assert.NotNil(svc.publicKey)
+	svc.assert.NotNil(svc.log)
+
+	log := svc.log.With(slog.String("preview_token", tokenStr[0:5]))
+	log.Info("Parsing token")
+	defer log.Info("Finished parsing token")
 
 	token, err := jwt.Parse(tokenStr, func(t *jwt.Token) (any, error) {
 		return svc.publicKey, nil
 	}, jwt.WithValidMethods([]string{(&jwt.SigningMethodEd25519{}).Alg()}))
 	if err != nil {
+		log.Error("Invalid token", slog.String("error", err.Error()))
 		return nil, errors.Join(errors.New("service: invalid token"), err)
 	}
 
 	_, ok := token.Claims.(jwt.RegisteredClaims) // TODO: Check issuer and if the token was issued at the correct date
 	if !ok {
+		log.Error("Invalid claims type", slog.String("claims", fmt.Sprintf("%#v", token.Claims)))
 		return nil, errors.New("service: invalid claims type")
 	}
 
