@@ -67,8 +67,8 @@ func (ctrl userController) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, passwd := r.FormValue("username"), r.FormValue("password")
-	if user == "" {
+	username, passwd := r.FormValue("username"), r.FormValue("password")
+	if username == "" {
 		exception.BadRequest(errors.New(`missing "username" form value`)).ServeHTTP(w, r)
 		return
 	}
@@ -78,7 +78,7 @@ func (ctrl userController) login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// TODO: Move token issuing to it's own service, make UserService.Login just return the user
-	token, _, err := ctrl.service.Login(user, passwd)
+	user, err := ctrl.userSvc.Login(username, passwd)
 	if errors.Is(err, service.ErrNotFound) {
 		exception.NotFound(exception.WithError(errors.New("user not found"))).ServeHTTP(w, r)
 		return
@@ -87,16 +87,22 @@ func (ctrl userController) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	token, err := ctrl.tokenSvc.Issue(user)
+	if err != nil {
+		exception.InternalServerError(err).ServeHTTP(w, r)
+		return
+	}
+
 	// TODO: harden the cookie policy to the same domain
 	cookie := &http.Cookie{
 		Path:     "/",
 		HttpOnly: true,
-		Name:     "token",
+		Name:     "authorization",
 		Value:    token,
 	}
 	http.SetCookie(w, cookie)
 
-	http.Redirect(w, r, "/", http.StatusSeeOther)
+	http.Redirect(w, r, ctrl.redirectPath, http.StatusSeeOther)
 }
 
 func (ctrl userController) register(w http.ResponseWriter, r *http.Request) {
@@ -116,8 +122,8 @@ func (ctrl userController) register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, passwd := r.FormValue("username"), r.FormValue("password")
-	if user == "" {
+	username, passwd := r.FormValue("username"), r.FormValue("password")
+	if username == "" {
 		exception.BadRequest(errors.New(`missing "username" form value`)).ServeHTTP(w, r)
 		return
 	}
@@ -126,18 +132,17 @@ func (ctrl userController) register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err := ctrl.service.Register(user, passwd)
-	if err != nil {
+	user, err := ctrl.userSvc.Register(username, passwd)
+	if errors.Is(err, service.ErrUsernameAlreadyExists) || errors.Is(err, service.ErrPasswordTooLong) {
+		exception.BadRequest(err).ServeHTTP(w, r)
+		return
+	} else if err != nil {
 		exception.InternalServerError(err).ServeHTTP(w, r)
 		return
 	}
 
-	// TODO: Move token issuing to it's own service, make UserService.Login just return the user
-	token, _, err := ctrl.service.Login(user, passwd)
-	if err == service.ErrNotFound {
-		exception.NotFound(exception.WithError(errors.New("user not found"))).ServeHTTP(w, r)
-		return
-	} else if err != nil {
+	token, err := ctrl.tokenSvc.Issue(user)
+	if err != nil {
 		exception.InternalServerError(err).ServeHTTP(w, r)
 		return
 	}
@@ -146,7 +151,7 @@ func (ctrl userController) register(w http.ResponseWriter, r *http.Request) {
 	cookie := &http.Cookie{
 		Path:     "/",
 		HttpOnly: true,
-		Name:     "token",
+		Name:     "authorization",
 		Value:    token,
 	}
 	http.SetCookie(w, cookie)
