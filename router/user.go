@@ -12,28 +12,47 @@ import (
 )
 
 type userController struct {
-	assert    tinyssert.Assertions
-	templates templates.ITemplate
-	service   *service.UserService
+	userSvc  *service.User
+	tokenSvc *service.Token
 
-	loginPath string
+	loginPath    string
+	redirectPath string
+	templates    templates.ITemplate
+
+	assert tinyssert.Assertions
 }
 
-func newUserController(
-	service *service.UserService,
-	templates templates.ITemplate,
-	assert tinyssert.Assertions,
-) userController {
+func newUserController(cfg userControllerCfg) userController {
+	cfg.Assert.NotNil(cfg.UserService)
+	cfg.Assert.NotNil(cfg.TokenService)
+	cfg.Assert.NotZero(cfg.LoginPath)
+	cfg.Assert.NotZero(cfg.RedirectPath)
+	cfg.Assert.NotNil(cfg.Templates)
+
 	return userController{
-		assert:    assert,
-		templates: templates,
-		service:   service,
+		userSvc:      cfg.UserService,
+		tokenSvc:     cfg.TokenService,
+		loginPath:    cfg.LoginPath,
+		redirectPath: cfg.RedirectPath,
+		templates:    cfg.Templates,
+		assert:       cfg.Assert,
 	}
 }
 
+type userControllerCfg struct {
+	UserService  *service.User
+	TokenService *service.Token
+
+	LoginPath    string
+	RedirectPath string
+	Templates    templates.ITemplate
+
+	Assert tinyssert.Assertions
+}
+
 func (ctrl userController) login(w http.ResponseWriter, r *http.Request) {
-	ctrl.assert.NotNil(ctrl.templates)
-	ctrl.assert.NotNil(ctrl.service)
+	ctrl.assert.NotNil(ctrl.templates) // TODO?: Remove these types of assertions, since golang will panic anyway
+	ctrl.assert.NotNil(ctrl.userSvc)   //        when the methods of these functions are called
 
 	if r.Method == http.MethodGet {
 		err := ctrl.templates.ExecuteTemplate(w, "login", nil)

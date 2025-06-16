@@ -96,6 +96,14 @@ func (router *router) setup() http.Handler {
 	r.Use(exception.PanicMiddleware())
 	r.Use(exception.Middleware())
 
+	userController := newUserController(userControllerCfg{
+		UserService:  router.userService,
+		TokenService: router.tokenService,
+		LoginPath:    "/login/",
+		RedirectPath: "/",
+		Templates:    router.templates,
+		Assert:       router.assert,
+	})
 
 	r.Handle("/assets/", http.StripPrefix("/assets/", http.FileServerFS(router.assets)))
 
