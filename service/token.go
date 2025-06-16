@@ -87,9 +87,9 @@ func (svc *Token) Issue(user model.User) (string, error) { // TODO: Return a ref
 func (svc Token) Parse(tokenStr string) (*jwt.Token, error) {
 	svc.assert.NotNil(svc.publicKey)
 
-	token, err := jwt.Parse(tokenStr, func(t *jwt.Token) (interface{}, error) {
+	token, err := jwt.Parse(tokenStr, func(t *jwt.Token) (any, error) {
 		return svc.publicKey, nil
-	}, jwt.WithValidMethods([]string{jwt.SigningMethodES256.Alg()}))
+	}, jwt.WithValidMethods([]string{(&jwt.SigningMethodEd25519{}).Alg()}))
 	if err != nil {
 		return nil, errors.Join(errors.New("service: invalid token"), err)
 	}
