@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	"crypto/ed25519"
 	"database/sql"
+	"encoding/base64"
 	"errors"
 	"flag"
 	"fmt"
@@ -38,6 +40,9 @@ var (
 	awsDefaultRegion   = os.Getenv("AWS_DEFAULT_REGION")
 	awsEndpointURL     = os.Getenv("AWS_ENDPOINT_URL")
 	s3Bucket           = os.Getenv("S3_BUCKET")
+
+	privateKeyEnv = os.Getenv("PRIVATE_KEY")
+	publicKeyEnv  = os.Getenv("PUBLIC_KEY")
 )
 
 func getEnv(key string, d string) string {
@@ -62,6 +67,10 @@ func init() {
 		log.Fatal("AWS_ENDPOINT_URL should not be a empty value")
 	case s3Bucket == "":
 		log.Fatal("S3_BUCKET should not be a empty value")
+	case privateKeyEnv == "":
+		log.Fatal("PRIVATE_KEY not be a empty value")
+	case publicKeyEnv == "":
+		log.Fatal("PUBLIC_KEY not be a empty value")
 	}
 }
 
@@ -118,6 +127,38 @@ func main() {
 		opts = append(opts, comicverse.WithTemplates(t))
 
 		opts = append(opts, comicverse.WithDevelopmentMode())
+	}
+
+	// TODO: Move this to dedicated function
+	privateKeyStr, err := base64.URLEncoding.DecodeString(privateKeyEnv)
+	if err != nil {
+		log.Error("Failed to decode PRIVATE_KEY from base64", slog.String("error", err.Error()))
+		os.Exit(1)
+	}
+	publicKeyStr, err := base64.URLEncoding.DecodeString(publicKeyEnv)
+	if err != nil {
+		log.Error("Failed to decode PUBLIC_KEY from base64", slog.String("error", err.Error()))
+		os.Exit(1)
+	}
+
+	edPrivKey := ed25519.PrivateKey(privateKeyStr)
+	edPubKey := ed25519.PublicKey(publicKeyStr)
+
+	if len(edPrivKey) != ed25519.PrivateKeySize {
+		log.Error("PRIVATE_KEY is not of valid size", slog.Int("size", len(edPrivKey)))
+		os.Exit(1)
+	}
+	if len(edPubKey) != ed25519.PublicKeySize {
+		log.Error("PUBLIC_KEY is not of valid size", slog.Int("size", len(edPubKey)))
+		os.Exit(1)
+	}
+
+	if !edPubKey.Equal(edPrivKey.Public()) {
+		log.Error("PUBLIC_KEY is not equal from extracted public key",
+			slog.String("extracted", fmt.Sprintf("%x", edPrivKey.Public())),
+			slog.String("key", fmt.Sprintf("%x", edPubKey)),
+		)
+		os.Exit(1)
 	}
 
 	app, err := comicverse.New(comicverse.Config{
