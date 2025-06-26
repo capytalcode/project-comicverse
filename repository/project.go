@@ -25,10 +25,10 @@ func NewProject(ctx context.Context, db *sql.DB, log *slog.Logger, assert tinyss
 
 	_, err = tx.ExecContext(ctx, `
 	CREATE TABLE IF NOT EXISTS projects (
-		id		  TEXT NOT NULL PRIMARY KEY,
-		title         TEXT NOT NULL,
-		created_at    TEXT NOT NULL,
-		updated_at    TEXT NOT NULL
+		id		   TEXT NOT NULL PRIMARY KEY,
+		title      TEXT NOT NULL,
+		created_at TEXT NOT NULL,
+		updated_at TEXT NOT NULL
 	)`)
 	if err != nil {
 		return nil, err
@@ -56,7 +56,7 @@ func (repo Project) Create(p model.Project) error {
 	}
 
 	q := `
-	INSERT INTO users (id, title, created_at, updated_at)
+	INSERT INTO projects (id, title, created_at, updated_at)
 	  VALUES (:id, :title, :created_at, :updated_at)
 	`
 
