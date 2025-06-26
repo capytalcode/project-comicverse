@@ -5,6 +5,7 @@ import (
 	"crypto/ed25519"
 	"database/sql"
 	"errors"
+	"fmt"
 	"io"
 	"io/fs"
 	"log/slog"
@@ -142,12 +143,12 @@ func (app *app) setup() error {
 
 	userRepository, err := repository.NewUser(app.ctx, app.db, app.logger.WithGroup("repository.user"), app.assert)
 	if err != nil {
-		return errors.Join(errors.New("app: failed to start user repository"), err)
+		return fmt.Errorf("app: failed to start user repository: %w", err)
 	}
 
-	tokenRepository, err := repository.NewToken(app.ctx, app.db, app.logger.WithGroup("repository.logger"), app.assert)
+	tokenRepository, err := repository.NewToken(app.ctx, app.db, app.logger.WithGroup("repository.token"), app.assert)
 	if err != nil {
-		return errors.Join(errors.New("app: failed to start token repository"), err)
+		return fmt.Errorf("app: failed to start token repository: %w", err)
 	}
 
 	userService := service.NewUser(userRepository, app.logger.WithGroup("service.user"), app.assert)
