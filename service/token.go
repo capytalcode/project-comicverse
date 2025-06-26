@@ -58,7 +58,7 @@ func (svc *Token) Issue(user model.User) (string, error) { // TODO: Return a ref
 
 	jti, err := uuid.NewV7()
 	if err != nil {
-		return "", errors.Join(errors.New("service: failed to generate token UUID"), err)
+		return "", fmt.Errorf("service: failed to generate token UUID: %w", err)
 	}
 
 	now := time.Now()
@@ -76,7 +76,7 @@ func (svc *Token) Issue(user model.User) (string, error) { // TODO: Return a ref
 
 	signed, err := t.SignedString(svc.privateKey)
 	if err != nil {
-		return "", errors.Join(errors.New("service: failed to sign token"), err)
+		return "", fmt.Errorf("service: failed to sign token: %w", err)
 	}
 
 	// TODO: Store refresh tokens in repo
@@ -87,7 +87,7 @@ func (svc *Token) Issue(user model.User) (string, error) { // TODO: Return a ref
 		DateExpires: expires,
 	})
 	if err != nil {
-		return "", errors.Join(errors.New("service: failed to save token"), err)
+		return "", fmt.Errorf("service: failed to save token: %w", err)
 	}
 
 	return signed, nil
@@ -106,7 +106,7 @@ func (svc Token) Parse(tokenStr string) (*jwt.Token, error) {
 	}, jwt.WithValidMethods([]string{(&jwt.SigningMethodEd25519{}).Alg()}))
 	if err != nil {
 		log.Error("Invalid token", slog.String("error", err.Error()))
-		return nil, errors.Join(errors.New("service: invalid token"), err)
+		return nil, fmt.Errorf("service: invalid token: %w", err)
 	}
 
 	// TODO: Check issuer and if the token was issued at the correct date
@@ -114,7 +114,7 @@ func (svc Token) Parse(tokenStr string) (*jwt.Token, error) {
 	_, ok := token.Claims.(jwt.MapClaims)
 	if !ok {
 		log.Error("Invalid claims type", slog.String("claims", fmt.Sprintf("%#v", token.Claims)))
-		return nil, errors.New("service: invalid claims type")
+		return nil, fmt.Errorf("service: invalid claims type")
 	}
 
 	return token, nil
@@ -136,18 +136,18 @@ func (svc Token) Revoke(token *jwt.Token) error {
 
 	jti, err := uuid.Parse(claims.ID)
 	if err != nil {
-		return errors.Join(errors.New("service: invalid token UUID"), err)
+		return fmt.Errorf("service: invalid token UUID: %w", err)
 	}
 
 	user, err := uuid.Parse(claims.Subject)
 	if err != nil {
-		return errors.Join(errors.New("service: invalid token subject UUID"), err)
+		return fmt.Errorf("service: invalid token subject UUID: %w", err)
 	}
 
 	// TODO: Mark tokens as revoked instead of deleting them
 	err = svc.repo.Delete(jti, user)
 	if err != nil {
-		return errors.Join(errors.New("service: failed to delete token"), err)
+		return fmt.Errorf("service: failed to delete token: %w", err)
 	}
 
 	return nil
@@ -169,19 +169,19 @@ func (svc Token) IsRevoked(token *jwt.Token) (bool, error) {
 
 	jti, err := uuid.Parse(claims.ID)
 	if err != nil {
-		return false, errors.Join(errors.New("service: invalid token UUID"), err)
+		return false, fmt.Errorf("service: invalid token UUID: %w", err)
 	}
 
 	user, err := uuid.Parse(claims.Subject)
 	if err != nil {
-		return false, errors.Join(errors.New("service: invalid token subject UUID"), err)
+		return false, fmt.Errorf("service: invalid token subject UUID: %w", err)
 	}
 
 	_, err = svc.repo.Get(jti, user)
 	if errors.Is(err, repository.ErrNotFound) {
 		return true, nil
 	} else if err != nil {
-		return false, errors.Join(errors.New("service: failed to get token"), err)
+		return false, fmt.Errorf("service: failed to get token: %w", err)
 	}
 
 	return false, nil

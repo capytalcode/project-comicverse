@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+	"fmt"
 	"log/slog"
 	"time"
 
@@ -40,12 +41,12 @@ func (svc *User) Register(username, password string) (model.User, error) {
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
-		return model.User{}, errors.Join(errors.New("service: unable to generate password hash"))
+		return model.User{}, errors.New("service: unable to generate password hash")
 	}
 
 	id, err := uuid.NewV7()
 	if err != nil {
-		return model.User{}, errors.Join(errors.New("service: unable to create user id"), err)
+		return model.User{}, fmt.Errorf("service: unable to create user id", err)
 	}
 
 	now := time.Now()
@@ -60,7 +61,7 @@ func (svc *User) Register(username, password string) (model.User, error) {
 
 	u, err = svc.repo.Create(u)
 	if err != nil {
-		return model.User{}, errors.Join(errors.New("service: failed to create user model"), err)
+		return model.User{}, fmt.Errorf("service: failed to create user model: %w", err)
 	}
 
 	return u, nil
@@ -76,12 +77,12 @@ func (svc *User) Login(username, password string) (user model.User, err error) {
 
 	user, err = svc.repo.GetByUsername(username)
 	if err != nil {
-		return model.User{}, errors.Join(errors.New("service: unable to find user"), err)
+		return model.User{}, fmt.Errorf("service: unable to find user: %w", err)
 	}
 
 	err = bcrypt.CompareHashAndPassword(user.Password, []byte(password))
 	if err != nil {
-		return model.User{}, errors.Join(errors.New("service: unable to compare passwords"), err)
+		return model.User{}, fmt.Errorf("service: unable to compare passwords: %w", err)
 	}
 
 	return user, nil

@@ -10,6 +10,8 @@ import (
 	"forge.capytal.company/loreddev/x/tinyssert"
 )
 
+// TODO: Add rowback to all return errors, or use context to cancel operations
+
 type baseRepostiory struct {
 	db *sql.DB
 
