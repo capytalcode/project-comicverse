@@ -1,45 +1,59 @@
-{{define "dashboard"}}
-{{template "layout-page-start" (args "Title" "Dashboard")}}
+{{define "dashboard"}} {{template "layout-page-start" (args "Title"
+"Dashboard")}}
 <main class="h-full w-full justify-center px-5 py-10 align-middle">
-	{{if and (ne . nil) (ne (len .) 0)}}
-	<section class="flex h-64 flex-col gap-5">
-		<div class="flex justify-between">
-			<h2 class="text-2xl">Projects</h2>
-			<form action="/projects/" method="post">
-				<button class="rounded-full bg-slate-700 p-1 px-3 text-sm text-slate-100">
-					New project
-				</button>
-			</form>
-		</div>
-		<div class="grid h-full grid-flow-col grid-rows-1 justify-start gap-5 overflow-scroll">
-			{{range .}}
-			<div class="w-38 grid h-full grid-rows-2 bg-slate-500">
-				<div class="bg-blue-500 p-2">Image</div>
-				<div class="p-2">
-					<a href="/projects/{{.ID}}">
-						<h3>{{.Title}}</h3>
-						<p>{{.ID}}</p>
-					</a>
-					<form action="/projects/{{.ID}}/" method="post">
-						<input type="hidden" name="x-method" value="delete">
-						<button class="rounded-full bg-red-700 p-1 px-3 text-sm text-slate-100">
-							Delete
-						</button>
-					</form>
-				</div>
-			</div>
-			{{end}}
-		</div>
-	</section>
-	{{else}}
-	<div class="fixed flex h-screen w-full items-center justify-center top-0 left-0">
-		<form action="/projects/" method="post">
-			<button class="rounded-full bg-slate-700 p-2 px-5 text-slate-100">
-				New project
-			</button>
-		</form>
-	</div>
-	{{end}}
+  {{if and (ne . nil) (ne (len .) 0)}}
+  <section class="flex h-64 flex-col gap-5">
+    <div class="flex justify-between">
+      <h2 class="text-2xl">Projects</h2>
+      <form action="/p/" method="post">
+        <button
+          class="rounded-full bg-slate-700 p-1 px-3 text-sm text-slate-100"
+        >
+          New project
+        </button>
+      </form>
+    </div>
+    <div
+      class="grid h-full grid-flow-col grid-rows-1 justify-start gap-5 overflow-scroll"
+    >
+      {{range .}}
+      <div class="w-38 grid h-full grid-rows-2 bg-slate-500">
+        <div class="bg-blue-500 p-2">Image</div>
+        <div class="p-2">
+          <a href="/p/{{.ID}}/">
+            <h3>{{.Title}}</h3>
+            <p class="hidden">{{.ID}}</p>
+          </a>
+          <form action="/p/{{.ID}}/" method="post">
+            <input type="hidden" name="x-method" value="delete" />
+            <button
+              class="rounded-full bg-red-700 p-1 px-3 text-sm text-slate-100"
+            >
+              Delete
+            </button>
+          </form>
+        </div>
+      </div>
+      {{end}}
+    </div>
+  </section>
+  {{else}}
+  <div
+    class="fixed flex h-screen w-full items-center justify-center top-0 left-0"
+  >
+    <form action="/p/" method="post" class="bg-slate-300 rounded-full">
+      <input
+        type="text"
+        name="title"
+        placeholder="Project title"
+        required
+        class="pl-5"
+      />
+      <button class="rounded-full bg-slate-700 p-2 px-5 text-slate-100">
+        New project
+      </button>
+    </form>
+  </div>
+  {{end}}
 </main>
-{{template "layout-page-end"}}
-{{end}}
+{{template "layout-page-end"}} {{end}}
