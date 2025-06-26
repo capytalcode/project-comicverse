@@ -111,6 +111,7 @@ func (router *router) setup() http.Handler {
 		Templates:    router.templates,
 		Assert:       router.assert,
 	})
+	projectController := newProjectController(router.projectService, router.templates, router.assert)
 
 	r.Handle("/assets/", http.StripPrefix("/assets/", http.FileServerFS(router.assets)))
 
@@ -120,11 +121,7 @@ func (router *router) setup() http.Handler {
 		// TODO: Add a way to the user to bypass this check and see the landing page.
 		//       Probably a query parameter to bypass like "?landing=true"
 		if _, ok := NewUserContext(r.Context()).GetUserID(); ok {
-			// TODO: Dashboard handler
-			err := router.templates.ExecuteTemplate(w, "dashboard", nil)
-			if err != nil {
-				exception.InternalServerError(err).ServeHTTP(w, r)
-			}
+			projectController.dashboard(w, r)
 			return
 		}
 
@@ -137,5 +134,20 @@ func (router *router) setup() http.Handler {
 	r.HandleFunc("/login/{$}", userController.login)
 	r.HandleFunc("/register/{$}", userController.register)
 
+	// TODO: Provide/redirect short project-id paths to long paths with the project title as URL /projects/title-of-the-project-<start of uuid>
+	r.HandleFunc("GET /p/{projectID}/{$}", projectController.getProject)
+	r.HandleFunc("POST /p/{$}", projectController.createProject)
+
 	return r
+}
+
+// getMethod is a helper function to get the HTTP method of request, tacking precedence
+// the "x-method" argument sent by requests via form or query values.
+func getMethod(r *http.Request) string {
+	m := r.FormValue("x-method")
+	if m != "" {
+		return strings.ToUpper(m)
+	}
+
+	return strings.ToUpper(r.Method)
 }
