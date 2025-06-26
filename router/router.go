@@ -5,6 +5,7 @@ import (
 	"io/fs"
 	"log/slog"
 	"net/http"
+	"strings"
 
 	"forge.capytal.company/capytalcode/project-comicverse/service"
 	"forge.capytal.company/capytalcode/project-comicverse/templates"
@@ -15,8 +16,9 @@ import (
 )
 
 type router struct {
-	userService  *service.User
-	tokenService *service.Token
+	userService    *service.User
+	tokenService   *service.Token
+	projectService *service.Project
 
 	templates templates.ITemplate
 	assets    fs.FS
@@ -33,6 +35,9 @@ func New(cfg Config) (http.Handler, error) {
 	if cfg.TokenService == nil {
 		return nil, errors.New("token service is nil")
 	}
+	if cfg.ProjectService == nil {
+		return nil, errors.New("project service is nil")
+	}
 	if cfg.Templates == nil {
 		return nil, errors.New("templates is nil")
 	}
@@ -47,8 +52,9 @@ func New(cfg Config) (http.Handler, error) {
 	}
 
 	r := &router{
-		userService:  cfg.UserService,
-		tokenService: cfg.TokenService,
+		userService:    cfg.UserService,
+		tokenService:   cfg.TokenService,
+		projectService: cfg.ProjectService,
 
 		templates: cfg.Templates,
 		assets:    cfg.Assets,
@@ -62,8 +68,9 @@ func New(cfg Config) (http.Handler, error) {
 }
 
 type Config struct {
-	UserService  *service.User
-	TokenService *service.Token
+	UserService    *service.User
+	TokenService   *service.Token
+	ProjectService *service.Project
 
 	Templates    templates.ITemplate
 	Assets       fs.FS

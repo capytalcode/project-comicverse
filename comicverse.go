@@ -151,6 +151,16 @@ func (app *app) setup() error {
 		return fmt.Errorf("app: failed to start token repository: %w", err)
 	}
 
+	projectRepository, err := repository.NewProject(app.ctx, app.db, app.logger.WithGroup("repository.project"), app.assert)
+	if err != nil {
+		return fmt.Errorf("app: failed to start project repository: %w", err)
+	}
+
+	permissionRepository, err := repository.NewPermissions(app.ctx, app.db, app.logger.WithGroup("repository.permission"), app.assert)
+	if err != nil {
+		return fmt.Errorf("app: failed to start permission repository: %w", err)
+	}
+
 	userService := service.NewUser(userRepository, app.logger.WithGroup("service.user"), app.assert)
 	tokenService := service.NewToken(service.TokenConfig{
 		PrivateKey: app.privateKey,
@@ -159,10 +169,12 @@ func (app *app) setup() error {
 		Logger:     app.logger.WithGroup("service.token"),
 		Assertions: app.assert,
 	})
+	projectService := service.NewProject(projectRepository, permissionRepository, app.logger.WithGroup("service.project"), app.assert)
 
 	app.handler, err = router.New(router.Config{
-		UserService:  userService,
-		TokenService: tokenService,
+		UserService:    userService,
+		TokenService:   tokenService,
+		ProjectService: projectService,
 
 		Templates:    app.templates,
 		DisableCache: app.developmentMode,
