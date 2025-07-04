@@ -12,6 +12,8 @@ import (
 	"forge.capytal.company/loreddev/x/smalltrip"
 	"forge.capytal.company/loreddev/x/smalltrip/exception"
 	"forge.capytal.company/loreddev/x/smalltrip/middleware"
+	"forge.capytal.company/loreddev/x/smalltrip/multiplexer"
+	"forge.capytal.company/loreddev/x/smalltrip/problem"
 	"forge.capytal.company/loreddev/x/tinyssert"
 )
 
@@ -88,8 +90,16 @@ func (router *router) setup() http.Handler {
 
 	log.Debug("Initializing router")
 
+	mux := multiplexer.NewMultiplexer()
+	mux = multiplexer.WithPatternRules(mux,
+		multiplexer.EnsureTrailingSlash(),
+		// multiplexer.EnsureMethod(),
+		multiplexer.EnsureStrictEnd(),
+	)
+	mux = multiplexer.WithFormMethod(mux, "x-method")
+
 	r := smalltrip.NewRouter(
-		smalltrip.WithAssertions(router.assert),
+		smalltrip.WithMultiplexer(mux),
 		smalltrip.WithLogger(log.WithGroup("smalltrip")),
 	)
 
@@ -113,7 +123,7 @@ func (router *router) setup() http.Handler {
 	})
 	projectController := newProjectController(router.projectService, router.templates, router.assert)
 
-	r.Handle("/assets/", http.StripPrefix("/assets/", http.FileServerFS(router.assets)))
+	r.Handle("/assets/{asset...}", http.StripPrefix("/assets/", http.FileServerFS(router.assets)))
 
 	r.Use(userController.userMiddleware)
 
@@ -137,6 +147,10 @@ func (router *router) setup() http.Handler {
 	// TODO: Provide/redirect short project-id paths to long paths with the project title as URL /projects/title-of-the-project-<start of uuid>
 	r.HandleFunc("GET /p/{projectID}/{$}", projectController.getProject)
 	r.HandleFunc("POST /p/{$}", projectController.createProject)
+
+	r.HandleFunc("/test/{$}", func(w http.ResponseWriter, r *http.Request) {
+		problem.NewMethodNotAllowed([]string{http.MethodGet, http.MethodDelete}).ServeHTTP(w, r)
+	})
 
 	return r
 }
